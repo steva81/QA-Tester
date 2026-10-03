@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block page_title %}Run QA Test{% endblock %}
+
+{% block content %}
+<div class="workflow">
+    <div class="workflow-step active">
+        <div class="workflow-step-icon">1</div>
+        <span>Select Project</span>
+    </div>
+    <div class="workflow-step">
+        <div class="workflow-step-icon">2</div>
+        <span>Review Test Plan</span>
+    </div>
+    <div class="workflow-step">
+        <div class="workflow-step-icon">3</div>
+        <span>Run Test</span>
+    </div>
+    <div class="workflow-step">
+        <div class="workflow-step-icon">4</div>
+        <span>Results</span>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px; margin: 32px auto; padding: 32px; background: var(--surface);">
+    <h3 style="margin-top: 0; font-size: 1.5rem; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">Select QA Project</h3>
+    
+    {% if projects %}
+    <div class="form-group" style="margin-bottom: 24px;">
+        <label style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Project:</label>
+        <select id="projectSelect" class="form-control" style="font-size: 1rem; padding: 0.6rem;">
+            <option value="">-- Select Project --</option>
+            {% for p in projects %}
+            <option value="{{ p.id }}">#{{ p.id }}: {{ p.name }} ({{ p.environment }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div style="display: flex; justify-content: flex-end;">
+        <button class="btn btn-primary" onclick="proceed()" style="padding: 0.6rem 1.5rem;">Next: Review Test Plan →</button>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px 20px;">
+        <p class="text-muted" style="margin-bottom: 20px;">No QA projects exist yet.</p>
+        <a href="/projects" class="btn btn-primary">Create QA Project</a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function proceed() {
+    const sel = document.getElementById('projectSelect');
+    if(sel.value) {
+        window.location.href = '/project/' + sel.value + '/dry-run';
+    } else {
+        alert("Please select a project.");
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block page_title %}QA Run History{% endblock %}
+
+{% block content %}
+<style>
+@media (max-width: 1100px) {
+    .desktop-history-table { display: none !important; }
+    .mobile-history-cards { display: flex !important; flex-direction: column; gap: 16px; }
+}
+@media (min-width: 1101px) {
+    .desktop-history-table { display: block !important; }
+    .mobile-history-cards { display: none !important; }
+}
+</style>
+{% if not grouped_runs %}
+<div class="card" style="text-align: center; padding: 60px 40px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--gray-400); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: 16px;">
+    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--gray-400);"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div>
+        <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; color: var(--text-primary);">No QA runs exist</h3>
+        <p style="margin: 0 0 20px 0; font-size: 0.95rem;">You haven't run any tests yet.</p>
+        <a href="/run-test" class="btn btn-primary">Run First QA Test</a>
+    </div>
+</div>
+{% endif %}
+
+{% for date_str, runs in grouped_runs.items() %}
+    <h3 style="margin-top: 32px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--border); font-size: 1.25rem; font-weight: 600; color: var(--text-primary);">
+        {% if date_str == today_str %}TODAY{% elif date_str == yesterday_str %}YESTERDAY{% else %}{{ date_str }}{% endif %}
+    </h3>
+    
+    <div class="card desktop-history-table" style="padding: 0; overflow-x: auto; width: 100%;">
+        <table class="table" style="margin: 0; font-size: 0.95rem; min-width: 900px;">
+            <thead>
+                <tr>
+                    <th style="width: 10%;">Time</th>
+                    <th style="width: 25%;">Project</th>
+                    <th style="width: 10%;">Run ID</th>
+                    <th style="width: 15%;">Status</th>
+                    <th style="width: 20%;">Checks Summary</th>
+                    <th style="width: 10%;">Findings</th>
+                    <th style="width: 10%;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in runs %}
+                <tr>
+                    <td style="white-space: nowrap; font-variant-numeric: tabular-nums;" class="text-muted">{{ r.time_str }}</td>
+                    <td style="vertical-align: middle;"><strong>{{ r.project_name }}</strong></td>
+                    <td style="vertical-align: middle; font-weight: 500;">#{{ r.id }}</td>
+                    <td style="vertical-align: middle;">
+                        {% if r.status == 'RUNNING' %}
+                        <span class="badge badge-info">Running</span>
+                        {% elif r.status == 'COMPLETED' %}
+                        <span class="badge badge-success">Completed</span>
+                        {% else %}
+                        <span class="badge badge-neutral">{{ r.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="vertical-align: middle;">
+                        {% if r.status == 'COMPLETED' %}
+                            <span style="color: var(--success-dark); font-weight: 600;">{{ r.pass_count }} Pass</span> <span style="color: var(--gray-300);">|</span>
+                            <span style="color: var(--danger-dark); font-weight: 600;">{{ r.fail_count }} Fail</span> <span style="color: var(--gray-300);">|</span>
+                            <span style="color: var(--warning-dark); font-weight: 600;">{{ r.obs_count }} Obs</span>
+                        {% else %}
+                            <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td style="vertical-align: middle;">
+                        {% if r.finding_count > 0 %}
+                        <span style="color: var(--danger-dark); font-weight: 600;">{{ r.finding_count }}</span>
+                        {% else %}
+                        <span style="color: var(--text-muted); font-weight: 500;">0</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/run/{{ r.id }}" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.85rem;">View Results</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mobile-history-cards" style="display: none;">
+        {% for r in runs %}
+        <div class="card" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 0; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+                <div>
+                    <div style="font-size: 1.05rem; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Run #{{ r.id }} – {{ r.project_name }}</div>
+                    <div style="color: var(--text-muted); font-size: 0.85rem;">{{ r.time_str }}</div>
+                </div>
+                <div>
+                    {% if r.status == 'RUNNING' %}
+                    <span class="badge badge-info">Running</span>
+                    {% elif r.status == 'COMPLETED' %}
+                    <span class="badge badge-success">Completed</span>
+                    {% else %}
+                    <span class="badge badge-neutral">{{ r.status }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: var(--gray-50); padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.9rem;">
+                <div>
+                {% if r.status == 'COMPLETED' %}
+                    <span style="color: var(--success-dark); font-weight: 600;">{{ r.pass_count }} Pass</span> <span style="color: var(--gray-300);">|</span>
+                    <span style="color: var(--danger-dark); font-weight: 600;">{{ r.fail_count }} Fail</span> <span style="color: var(--gray-300);">|</span>
+                    <span style="color: var(--warning-dark); font-weight: 600;">{{ r.obs_count }} Obs</span>
+                    <span style="color: var(--gray-300);">|</span>
+                    <span style="{% if r.finding_count > 0 %}color: var(--danger-dark); font-weight: 600;{% else %}color: var(--text-muted); font-weight: 500;{% endif %}">{{ r.finding_count }} Findings</span>
+                {% else %}
+                    <span class="text-muted">Checks pending...</span>
+                {% endif %}
+                </div>
+                <a href="/run/{{ r.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; flex-shrink: 0;">View Results</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endfor %}
+{% endblock %}

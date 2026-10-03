@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block page_title %}{{ project.name }}{% endblock %}
+
+{% block topbar_actions %}
+<a href="/project/{{ project.id }}/dry-run" class="btn btn-primary">Run QA Test</a>
+{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr)); gap: 24px; margin-bottom: 32px;">
+    <div class="card" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">Platform Details</h3>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg> <strong>Website</strong>
+                </div>
+                <div style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
+                    <a href="{{ project.target_url }}" target="_blank" style="color: var(--primary); text-decoration: none;" class="text-mono">{{ project.target_url }}</a>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg> <strong>Environment</strong>
+                </div>
+                <div style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
+                    {{ project.environment }}
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> <strong>Tester</strong>
+                </div>
+                <div style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
+                    {{ project.tester_name }}
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> <strong>Created</strong>
+                </div>
+                <div class="text-muted" style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
+                    {{ project.created_at_local }}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card" style="margin-bottom: 0;">
+        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">Quick Actions</h3>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <a href="/project/{{ project.id }}/dry-run" class="btn btn-primary" style="width: 100%; justify-content: flex-start;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"></circle></svg> Run QA Test</a>
+            <a href="/findings?project_id={{ project.id }}&filter=open" class="btn btn-secondary" style="width: 100%; justify-content: flex-start;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> View Open Findings</a>
+            <a href="/history?project_id={{ project.id }}" class="btn btn-outline" style="width: 100%; justify-content: flex-start;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> View Project History</a>
+        </div>
+    </div>
+</div>
+
+<h3 style="margin-bottom: 16px; font-size: 1.25rem;">Recent QA Runs</h3>
+{% if runs %}
+<div class="card" style="padding: 0; overflow-x: auto; width: 100%;">
+    <table class="table" style="margin: 0;">
+        <thead>
+            <tr>
+                <th>Run ID</th>
+                <th>Status</th>
+                <th>Started</th>
+                <th style="width: 1%;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in runs %}
+            <tr>
+                <td style="font-weight: 500;">{{ r.id }}</td>
+                <td>
+                    {% if r.status == 'RUNNING' %}
+                    <span class="badge badge-info">Running</span>
+                    {% elif r.status == 'COMPLETED' %}
+                    <span class="badge badge-success">Completed</span>
+                    {% else %}
+                    <span class="badge badge-neutral">{{ r.status }}</span>
+                    {% endif %}
+                </td>
+                <td class="text-muted">{{ r.start_time_local }}</td>
+                <td><a href="/run/{{ r.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View Results</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 60px 40px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--gray-400); display: flex; flex-direction: column; align-items: center; gap: 16px;">
+    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--gray-400);"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <div>
+        <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; color: var(--text-primary);">No QA runs exist</h3>
+        <p style="margin: 0 0 20px 0; font-size: 0.95rem;">You haven't run any tests for this project yet.</p>
+        <a href="/project/{{ project.id }}/dry-run" class="btn btn-primary">Start First QA Test</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

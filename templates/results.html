@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block page_title %}QA Test Results{% endblock %}
+
+{% block topbar_actions %}
+<a href="/project/{{ project.id }}" class="btn btn-secondary">Project Details</a>
+<a href="/reports" class="btn btn-primary">Open Reports</a>
+{% endblock %}
+
+{% block content %}
+{% if request.path.startswith('/run-test') or 'run-test' in request.headers.get('Referer', '') or 'dry-run' in request.headers.get('Referer', '') %}
+<div class="workflow">
+    <div class="workflow-step completed">
+        <div class="workflow-step-icon">1</div>
+        <span>Select Project</span>
+    </div>
+    <div class="workflow-step completed">
+        <div class="workflow-step-icon">2</div>
+        <span>Review Test Plan</span>
+    </div>
+    <div class="workflow-step completed">
+        <div class="workflow-step-icon">3</div>
+        <span>Run Test</span>
+    </div>
+    <div class="workflow-step active">
+        <div class="workflow-step-icon">4</div>
+        <span>Results</span>
+    </div>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">{{ project.name }} - Run #{{ run.id }}</h3>
+    <div class="grid-2">
+        <div style="font-size: 0.95rem;">
+            <p style="margin: 6px 0;"><strong>Started:</strong> <span class="text-muted">{{ run.start_time_local }}</span></p>
+            <p style="margin: 6px 0;"><strong>Target:</strong> <a href="{{ project.target_url }}" target="_blank" style="color: var(--primary); text-decoration: none;" class="text-mono">{{ project.target_url }}</a></p>
+            <p style="margin: 6px 0;"><strong>Environment:</strong> {{ project.environment }}</p>
+            <p style="margin: 6px 0;"><strong>Tester:</strong> {{ project.tester_name }}</p>
+        </div>
+        <div>
+            <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.95rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gray-200);">
+                    <span style="font-weight: 600;">Total Checks:</span>
+                    <span style="font-weight: 600;">{{ tests|length }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
+                    <span class="badge badge-success" style="width: 90px; justify-content: center;">PASS</span>
+                    <span style="font-weight: 500;">{{ stats.get('PASS', 0) }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
+                    <span class="badge badge-danger" style="width: 90px; justify-content: center;">FAIL</span>
+                    <span style="font-weight: 500;">{{ stats.get('FAIL', 0) }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="badge badge-warning" style="width: 90px; justify-content: center;">OBSERVATION</span>
+                    <span style="font-weight: 500;">{{ stats.get('OBSERVATION', 0) }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 1.25rem;">Findings Detected ({{ findings|length }})</h3>
+
+{% if findings %}
+<div class="grid-3">
+    {% for f in findings %}
+    <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column;">
+        <h4 style="margin-top: 0; margin-bottom: 8px; font-size: 1.1rem;"><a href="/finding/{{ f.id }}" style="text-decoration: none; color: var(--primary);">{{ f.stable_id }}</a></h4>
+        <p style="margin: 0 0 16px 0; font-weight: 600; font-size: 0.95rem; color: var(--text-primary); flex-grow: 1;">{{ f.title }}</p>
+        
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+            <span class="badge {{ 'badge-danger' if f.status == 'OPEN' else 'badge-neutral' }}">{{ f.status }}</span>
+            <span class="badge {{ 'badge-danger' if f.severity == 'High' else 'badge-warning' if f.severity == 'Medium' else 'badge-neutral' }}" title="Severity">S: {{ display_severity_risk(f.severity) }}</span>
+            
+            {% if display_review_status(f.review_status) == 'Pending review' %}
+            <span class="badge badge-warning">Pending review</span>
+            {% else %}
+            <span class="badge {{ 'badge-success' if f.review_status == 'APPROVED' else 'badge-danger' }}">{{ f.review_status }}</span>
+            {% endif %}
+        </div>
+        
+        <div style="margin-top: auto;">
+            <a href="/finding/{{ f.id }}" class="btn btn-outline" style="width: 100%;">Review Finding</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card" style="text-align: center; padding: 60px 40px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--gray-400); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: 16px;">
+    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--success);"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div>
+        <h3 style="margin: 0 0 8px 0; color: var(--success); font-size: 1.5rem;">No issues found!</h3>
+        <p style="margin: 0;">All automated checks passed successfully.</p>
+    </div>
+</div>
+{% endif %}
+
+<h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 1.25rem;">All Checks Performed</h3>
+<div class="card" style="padding: 0; overflow-x: auto; width: 100%;">
+    <table class="table" style="margin: 0; font-size: 0.9rem; min-width: 800px;">
+        <thead>
+            <tr>
+                <th style="width: 10%;">Time</th>
+                <th style="width: 30%;">URL</th>
+                <th style="width: 15%;">Viewport</th>
+                <th style="width: 10%;">Status</th>
+                <th style="width: 35%;">Expected vs Actual</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for t in tests %}
+            <tr>
+                <td style="white-space: nowrap; font-variant-numeric: tabular-nums;" class="text-muted">{{ t.timestamp_local.split(' ')[-1] if t.timestamp_local else '' }}</td>
+                <td style="overflow-wrap: anywhere; word-break: normal;"><a href="{{ t.url }}" target="_blank" class="text-mono" style="color: var(--primary); text-decoration: none;">{{ t.url }}</a></td>
+                <td>{{ t.viewport }}</td>
+                <td>
+                    <span class="badge {{ 'badge-success' if t.status == 'PASS' else 'badge-danger' if t.status == 'FAIL' else 'badge-warning' }}">{{ t.status }}</span>
+                </td>
+                <td>
+                    <div style="margin-bottom: 6px;"><strong style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Exp:</strong> <span style="color: var(--text-primary);">{{ t.expected_result }}</span></div>
+                    <div><strong style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Act:</strong> <span style="color: var(--text-primary);">{{ t.actual_result }}</span></div>
+                    
+                    {% if t.actual_result and "net::ERR_CONNECTION_REFUSED" in t.actual_result %}
+                    <div style="margin-top: 12px; padding: 10px; background: var(--warning-light); border: 1px solid #fde68a; border-left: 4px solid var(--warning); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--warning-dark);">
+                        <strong>Note:</strong> QA Tester could not reach the website. Before reporting this as a bug, confirm that the local server is actually running at <code style="background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 2px;">{{ t.url }}</code>.
+                    </div>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

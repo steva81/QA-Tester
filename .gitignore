@@ -1,0 +1,24 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Build output
+build/
+dist/
+dist_locked/
+
+# QA Tester runtime / private data
+data/
+screenshots/
+reports/
+exports/
+logs/
+settings/
+test_db.sqlite
+
+# Secrets
+.env
+.env.*
