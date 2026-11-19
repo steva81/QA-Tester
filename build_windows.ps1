@@ -58,6 +58,12 @@ Write-Host "Discovered Chromium at: $ChromiumPath" -ForegroundColor Green
 # 6. Build Command
 # NOTE: The build step was previously disabled for Step C.
 # We are now proceeding with the actual PyInstaller execution.
+Write-Host "Sanitizing PATH for deterministic DLL resolution..." -ForegroundColor Yellow
+$BasePyDir = & $PythonPath -c "import sys; print(sys.base_prefix)"
+$VenvScripts = (Resolve-Path ".\venv\Scripts").Path
+$SysRoot = $env:SystemRoot
+$env:PATH = "$VenvScripts;$BasePyDir;$BasePyDir\DLLs;$SysRoot\System32;$SysRoot;$SysRoot\System32\Wbem;$SysRoot\System32\WindowsPowerShell\v1.0"
+
 Write-Host "Executing PyInstaller..." -ForegroundColor Yellow
 & $PyInstallerPath --clean .\QA-Tester.spec
 if ($LASTEXITCODE -ne 0) {

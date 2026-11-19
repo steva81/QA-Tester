@@ -1,166 +1,95 @@
-{% extends "base.html" %}
-
-{% block page_title %}QA Tester{% endblock %}
-
-{% block topbar_actions %}
-<button class="btn btn-primary" onclick="window.location.href='/run-test'">Start New QA Test</button>
-{% endblock %}
-
-{% block head %}
-<style>
-@media (max-width: 1200px) {
-    .desktop-activity-table { display: none !important; }
-    .mobile-activity-cards { display: block !important; }
-}
-@media (min-width: 1201px) {
-    .desktop-activity-table { display: block !important; }
-    .mobile-activity-cards { display: none !important; }
-}
-</style>
-{% endblock %}
-
+{% extends 'base.html' %}
+{% block title %}QA Tester{% endblock %}
 {% block content %}
-<p class="text-muted" style="margin-top: 0; margin-bottom: 32px; font-size: 1.1rem;">Functional QA testing, evidence and reporting in one place.</p>
-
-<div class="grid-4" style="margin-bottom: 32px;">
-    <a href="/projects" class="card metric-card" style="margin-bottom: 0; display: flex; flex-direction: column;">
-        <h3 class="text-muted" style="margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg> Projects
-        </h3>
-        <div style="font-size: 2.25rem; font-weight: 700; margin-top: 8px; color: var(--text-primary);">{{ projects_count }}</div>
-    </a>
-    <a href="/history" class="card metric-card" style="margin-bottom: 0; display: flex; flex-direction: column;">
-        <h3 class="text-muted" style="margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Tests Run
-        </h3>
-        <div style="font-size: 2.25rem; font-weight: 700; margin-top: 8px; color: var(--text-primary);">{{ runs_count }}</div>
-    </a>
-    <a href="/findings?filter=open" class="card metric-card" style="margin-bottom: 0; display: flex; flex-direction: column;">
-        <h3 class="text-muted" style="margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> Open Issues
-        </h3>
-        <div style="font-size: 2.25rem; font-weight: 700; margin-top: 8px; color: var(--text-primary);">{{ open_findings }}</div>
-    </a>
-    <a href="/findings?filter=needs_review" class="card metric-card" style="margin-bottom: 0; display: flex; flex-direction: column; {% if needs_review > 0 %}border-left: 4px solid var(--warning);{% endif %}">
-        <h3 class="text-muted" style="margin: 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Needs Review
-        </h3>
-        <div style="font-size: 2.25rem; font-weight: 700; margin-top: 8px; color: {% if needs_review > 0 %}var(--warning-dark){% else %}var(--text-primary){% endif %};">{{ needs_review }}</div>
-    </a>
-</div>
-
-<div class="grid-2">
-    <div>
-        <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; font-size: 1.25rem;">Quick Actions</h3>
-        
-        <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-            <div>
-                <strong style="display: block; font-size: 1.05rem; margin-bottom: 4px;">Start New QA Test</strong>
-                <span class="text-muted" style="font-size: 0.9rem;">Select or create a project and run a functional QA test.</span>
-            </div>
-            <a href="/run-test" class="btn btn-primary">Start</a>
-        </div>
-        
-        <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-            <div>
-                <strong style="display: block; font-size: 1.05rem; margin-bottom: 4px;">Create QA Project</strong>
-                <span class="text-muted" style="font-size: 0.9rem;">Add a new website or application to test.</span>
-            </div>
-            <a href="/projects" class="btn btn-outline">Create</a>
-        </div>
-        
-        <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-            <div>
-                <strong style="display: block; font-size: 1.05rem; margin-bottom: 4px;">Review Findings</strong>
-                <span class="text-muted" style="font-size: 0.9rem;">Review findings that still need your attention.</span>
-            </div>
-            <a href="/findings?filter=needs_review" class="btn btn-outline">Review</a>
-        </div>
-        
-        <div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 20px;">
-            <div>
-                <strong style="display: block; font-size: 1.05rem; margin-bottom: 4px;">Open Reports</strong>
-                <span class="text-muted" style="font-size: 0.9rem;">View and export QA reports.</span>
-            </div>
-            <a href="/reports" class="btn btn-outline">View</a>
-        </div>
+<div class="launch-container">
+  <!-- Framed colored welcome area -->
+  <section class="launch-welcome" aria-labelledby="welcome-heading">
+    <div class="launch-welcome-content">
+      <div class="launch-welcome-eyebrow">Quality Assurance Verification</div>
+      <h1 id="welcome-heading" class="launch-welcome-title">Welcome to QA Tester</h1>
+      <p class="launch-welcome-subtitle">Start QA against an authenticated session, discover safe interactions, and evaluate functionality with evidence-backed results.</p>
     </div>
-    
-    <div>
-        <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; font-size: 1.25rem; color: {% if needs_review > 0 %}var(--warning-dark){% else %}inherit{% endif %}">Items to Review</h3>
-        <div class="card" style="padding: 20px;">
-            {% if attention_items %}
-                <p style="font-weight: 600; margin-top: 0; margin-bottom: 4px;">{{ needs_review }} findings need review</p>
-                {% if attention_items|length < needs_review %}
-                <p class="text-muted" style="font-size: 0.85rem; margin-top: 0; margin-bottom: 16px;">Showing {{ attention_items|length }} of {{ needs_review }}</p>
-                {% else %}
-                <div style="margin-bottom: 16px;"></div>
-                {% endif %}
-                <ul style="padding-left: 20px; color: var(--text-secondary); margin-bottom: 20px;">
-                {% for item in attention_items %}
-                    <li style="margin-bottom: 8px;">
-                        <a href="/finding/{{ item.id }}" style="color: var(--primary); text-decoration: none; font-weight: 500;">{{ item.stable_id }}</a> 
-                        <span style="margin-left: 4px;">{{ item.title }}</span>
-                    </li>
-                {% endfor %}
-                </ul>
-                <a href="/findings?filter=needs_review" class="btn btn-secondary">Review Findings →</a>
-            {% else %}
-                <p class="text-muted" style="margin: 0;">You're up to date. No findings currently need review.</p>
-            {% endif %}
-        </div>
-        
-        <h3 style="border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-top: 32px; margin-bottom: 20px; font-size: 1.25rem;">Recent Activity</h3>
-        <div class="card" style="padding: 0; width: 100%;">
-            {% if recent_activity %}
-                <div class="desktop-activity-table" style="overflow-x: auto;">
-                    <table class="table" style="margin-bottom: 0; border: none; font-size: 0.9rem;">
-                        {% for act in recent_activity %}
-                        <tr>
-                            <td style="border-top: {% if loop.first %}none{% else %}1px solid var(--border){% endif %}; padding: 16px;">
-                                <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ act.project_name }}</strong><br>
-                                <span class="text-muted" style="font-size: 0.85rem;">{{ act.time_str }}</span>
-                            </td>
-                            <td style="border-top: {% if loop.first %}none{% else %}1px solid var(--border){% endif %}; text-align: right; vertical-align: middle; padding: 16px;">
-                                <span style="font-weight: 500;">Run #{{ act.id }}</span><br>
-                                <span style="font-size: 0.85rem; font-weight: 500; color: var(--danger-dark);">{{ act.finding_count }} finding(s)</span>
-                            </td>
-                            <td style="border-top: {% if loop.first %}none{% else %}1px solid var(--border){% endif %}; vertical-align: middle; width: 1%; padding: 16px;">
-                                <a href="/run/{{ act.id }}" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Results</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                </div>
+  </section>
 
-                <div class="mobile-activity-cards" style="display: none;">
-                    {% for act in recent_activity %}
-                    <div style="padding: 16px; border-top: {% if loop.first %}none{% else %}1px solid var(--border){% endif %}; display: flex; flex-direction: column; gap: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
-                            <div>
-                                <strong style="color: var(--text-primary); font-size: 0.95rem;">{{ act.project_name }}</strong><br>
-                                <span class="text-muted" style="font-size: 0.85rem;">{{ act.time_str }}</span>
-                            </div>
-                            <div style="text-align: right;">
-                                <span style="font-weight: 500;">Run #{{ act.id }}</span><br>
-                                <span style="font-size: 0.85rem; font-weight: 500; color: var(--danger-dark);">{{ act.finding_count }} finding(s)</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: flex-end;">
-                            <a href="/run/{{ act.id }}" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">Results</a>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                <div style="padding: 12px; text-align: center; border-top: 1px solid var(--border); background: var(--gray-50);">
-                    <a href="/history" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 500;">View Full History</a>
-                </div>
-            {% else %}
-                <div style="padding: 24px;">
-                    <p class="text-muted" style="margin: 0;">No recent activity.</p>
-                </div>
-            {% endif %}
+  <!-- Three prominent action cards -->
+  <div class="launch-grid">
+    <!-- Card 1: Start a new test -->
+    <article class="action-card action-card-primary" aria-label="Start a new test">
+      <div class="action-card-header">
+        <div class="action-card-icon action-card-icon-primary" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"></polygon>
+          </svg>
         </div>
+      </div>
+      <h2 class="action-card-title">Start a new test</h2>
+      <p class="action-card-desc">Choose an existing project or enter a new website, then proceed through session setup and test scope.</p>
+      <div class="action-card-footer">
+        <a class="btn btn-primary action-card-btn" href="/run-test" id="action-start-test">Start a test →</a>
+      </div>
+    </article>
+
+    <!-- Card 2: My projects -->
+    <article class="action-card" aria-label="My projects">
+      <div class="action-card-header">
+        <div class="action-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+      </div>
+      <h2 class="action-card-title">My projects</h2>
+      <p class="action-card-desc">Open, configure, and manage saved test projects, target URLs, and environments.</p>
+      <div class="action-card-footer">
+        <a class="btn btn-secondary action-card-btn" href="/projects" id="action-my-projects">View projects</a>
+      </div>
+    </article>
+
+    <!-- Card 3: Results & reports -->
+    <article class="action-card" aria-label="Results & reports">
+      <div class="action-card-header">
+        <div class="action-card-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+        </div>
+      </div>
+      <h2 class="action-card-title">Results &amp; reports</h2>
+      <p class="action-card-desc">Inspect run outcomes, review customer defect findings, and export illustrated reports.</p>
+      <div class="action-card-footer">
+        <a class="btn btn-secondary action-card-btn" href="/reports" id="action-results-reports">Browse reports</a>
+      </div>
+    </article>
+  </div>
+
+  {% if recent_activity %}
+  <section class="continue-section" aria-labelledby="continue-heading">
+    <div class="continue-header">
+      <h2 id="continue-heading" class="continue-title">Continue where you left off</h2>
     </div>
+    <div class="continue-card">
+      <div class="continue-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="continue-body">
+        <div class="continue-meta">
+          <span class="continue-project-name">{{ recent_activity.project_name }}</span>
+          <span class="badge {{ recent_activity.badge_class }}">{{ recent_activity.status }}</span>
+        </div>
+        <p class="continue-description">{{ recent_activity.description }}</p>
+      </div>
+      <div class="continue-action">
+        <a class="btn btn-secondary continue-btn" href="{{ recent_activity.destination }}" id="continue-action-btn">{{ recent_activity.action_label }} →</a>
+      </div>
+    </div>
+  </section>
+  {% endif %}
 </div>
 {% endblock %}

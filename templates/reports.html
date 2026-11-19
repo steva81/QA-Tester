@@ -1,94 +1,44 @@
-{% extends "base.html" %}
-
-{% block page_title %}QA Reports{% endblock %}
-
+{% extends 'base.html' %}
+{% block page_title %}Results &amp; reports{% endblock %}
+{% block page_subtitle %}<p class="text-muted">Find previous test runs, inspect findings, and export comprehensive reports.</p>{% endblock %}
 {% block topbar_actions %}
-<button class="btn btn-secondary" onclick="openReportsFolder()">Open Reports Folder</button>
+<a class="btn btn-secondary" href="/run-test">Start new test</a>
 {% endblock %}
 
 {% block content %}
-<p class="text-muted" style="margin-bottom: 24px; font-size: 1.05rem;">Export professional QA reports based on completed test runs.</p>
-
-<div class="card" style="padding: 0; overflow-x: auto; width: 100%;">
-    <table class="table" style="margin: 0; font-size: 0.95rem;">
-        <thead>
-            <tr>
-                <th style="width: 25%;">Project</th>
-                <th style="width: 10%;">Run ID</th>
-                <th style="width: 20%;">Date</th>
-                <th style="width: 10%;">Findings</th>
-                <th style="width: 35%;">Generate & Export Reports</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in runs %}
-            <tr>
-                <td style="vertical-align: middle;"><strong>{{ r.project_name }}</strong></td>
-                <td style="vertical-align: middle; font-weight: 500;">#{{ r.id }}</td>
-                <td style="white-space: nowrap; vertical-align: middle;" class="text-muted">{{ r.start_time_local }}</td>
-                <td style="vertical-align: middle;">
-                    {% if r.finding_count > 0 %}
-                    <span style="color: var(--danger-dark); font-weight: 600;">{{ r.finding_count }}</span>
-                    {% else %}
-                    <span style="color: var(--success-dark); font-weight: 600;">0</span>
-                    {% endif %}
-                </td>
-                <td style="display: flex; flex-direction: column; gap: 8px; padding-top: 16px; padding-bottom: 16px;">
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <a href="/export/{{ r.id }}/html" target="_blank" class="btn btn-outline" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>Web Report</a>
-                        <button onclick="generateReport({{ r.id }}, 'docx')" class="btn btn-primary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Document (DOCX)</button>
-                    </div>
-                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                        <button onclick="generateReport({{ r.id }}, 'txt')" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Simple Text</button>
-                        <button onclick="generateReport({{ r.id }}, 'markdown')" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Advanced Text</button>
-                    </div>
-                </td>
-            </tr>
-            {% else %}
-            <tr>
-                <td colspan="5" style="text-align: center; padding: 60px 40px; color: var(--text-muted);">
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 16px;">
-                        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--gray-400);"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                        <div>
-                            <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; color: var(--text-primary);">No reports available</h3>
-                            <p style="margin: 0; font-size: 0.95rem;">No QA runs exist yet. <a href="/run-test" style="color: var(--primary); font-weight: 500;">Run a QA Test</a> to generate reports.</p>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-<script>
-async function openReportsFolder() {
-    try {
-        const res = await fetch('/api/open-exports-folder', { method: 'POST' });
-        const data = await res.json();
-        if(data.status === 'success') {
-            showToast("✓ Opened reports folder");
-        } else {
-            showToast("Failed to open folder: " + data.message);
-        }
-    } catch(e) {
-        showToast("Network error opening folder");
-    }
-}
-
-async function generateReport(runId, format) {
-    try {
-        const res = await fetch(`/api/export/${runId}/${format}`, { method: 'POST' });
-        const data = await res.json();
-        if(data.status === 'success') {
-            showToast(`✓ Generated ${format.toUpperCase()}`);
-            fetch(`/api/exports/${data.filename}/open`, { method: 'POST' });
-        } else {
-            showToast("Failed to generate report: " + (data.message || data.error || "Unknown error"));
-        }
-    } catch(e) {
-        showToast("Network error generating report");
-    }
-}
-</script>
+<section class="panel">
+  <div class="panel-heading">
+    <h2>All test runs &amp; reports</h2>
+    {% if runs %}<span class="text-muted">{{ runs|length }} recorded run{{ 's' if runs|length != 1 else '' }}</span>{% endif %}
+  </div>
+  {% if runs %}
+  <ul class="row-list">
+    {% for r in runs %}
+    <li>
+      <div class="row-main">
+        <div>
+          <strong>{{ r.project_name }}</strong>
+          <span style="margin-left: 8px; font-weight: 500; color: var(--text-secondary);">Run #{{ r.id }}</span>
+          <span class="badge {{ 'badge-success' if r.status == 'COMPLETED' else 'badge-info' if r.status == 'RUNNING' else 'badge-danger' if r.status == 'FAILED' else 'badge-warning' }}" style="margin-left: 8px;">{{ r.status }}</span>
+        </div>
+        <p>{{ r.start_time_local }} · {{ r.finding_count }} finding{{ 's' if r.finding_count != 1 else '' }}</p>
+      </div>
+      <div class="actions">
+        <a class="btn btn-secondary" href="/run/{{ r.id }}">View results</a>
+        <a class="btn btn-primary" href="/run/{{ r.id }}?tab=reports">Open report</a>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="empty">
+    <h3>No test runs or reports recorded yet</h3>
+    <p>Run your first QA test to generate results, evidence, and exportable reports.</p>
+    <div class="actions" style="justify-content: center; margin-top: 16px;">
+      <a class="btn btn-primary" href="/run-test">Start a new test</a>
+      <a class="btn btn-secondary" href="/projects">Go to Projects</a>
+    </div>
+  </div>
+  {% endif %}
+</section>
 {% endblock %}

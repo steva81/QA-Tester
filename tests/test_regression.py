@@ -68,6 +68,20 @@ def test_explanations_wording():
     assert "kan bero på nätverksproblem" in expl_sv_verbal.lower()
     assert "säkert säga att servern är nere" in expl_sv_verbal.lower()
 
+    # Form label explanations
+    expl_en, expl_sv_learn, expl_sv_verbal = get_explanations(actual_result="Missing form label for input")
+    assert "input" in expl_en.lower()
+    assert "screen reader" in expl_en.lower()
+    assert "etikett" in expl_sv_learn.lower()
+    assert "skärmläsare" in expl_sv_verbal.lower()
+
+    # Document title explanations
+    expl_en, expl_sv_learn, expl_sv_verbal = get_explanations(actual_result="Missing or empty document title")
+    assert "<title>" in expl_en.lower()
+    assert "browser tab" in expl_en.lower()
+    assert "<title>" in expl_sv_learn.lower()
+    assert "sidtitel" in expl_sv_verbal.lower()
+
 def test_docx_export():
     from app.routes.exports import DOCX_AVAILABLE
     assert DOCX_AVAILABLE, "python-docx must be available"
@@ -76,8 +90,17 @@ def test_timezone_formatting():
     # Example UTC timestamp: 2026-01-01 12:00:00
     t = format_local_time("2026-01-01 12:00:00")
     assert t != "2026-01-01 12:00:00" # Should be formatted
+    assert "UTC" in t # Timezone explicitly identified
     # Check default format fallback
     assert format_local_time("not a date") == "not a date"
+
+def test_project_environment_placeholder(test_client):
+    res = test_client.get('/projects')
+    assert res.status_code == 200
+    html = res.data.decode('utf-8')
+    assert 'placeholder="Test, Development or Production"' in html
+    assert 'id="p_env" value="Development"' not in html
+
 
 def test_duplicate_projects():
     if os.path.exists("test_db.sqlite"):
@@ -189,7 +212,13 @@ def test_fixes_regression(test_client):
     # 1. Test Project Details Timezone
     response = test_client.get(f'/project/{p_id}')
     html = response.data.decode('utf-8')
-    assert "<strong>Created</strong>" in html
+    # Keep the frozen Phase 1C markup and verify the actual localized value,
+    # rather than the pre-redesign <strong> wrapper.
+    conn = get_db_connection()
+    created_at = conn.execute('SELECT created_at FROM projects WHERE id=?', (p_id,)).fetchone()[0]
+    conn.close()
+    assert f'Created {format_local_time(created_at)}' in html
+    assert f'Created {created_at}' not in html
     assert "class=\"text-muted\"" in html
     # Check it does NOT have raw iso format (2026-10-02 12:00:00) by looking for the absence of the typical raw pattern if possible, 
     # but at least we can verify it doesn't crash and renders the `_local` variable.

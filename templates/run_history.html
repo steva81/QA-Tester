@@ -52,7 +52,7 @@
                         {% if r.status == 'RUNNING' %}
                         <span class="badge badge-info">Running</span>
                         {% elif r.status == 'COMPLETED' %}
-                        <span class="badge badge-success">Completed</span>
+                        <span class="badge badge-success">COMPLETED</span>
                         {% else %}
                         <span class="badge badge-neutral">{{ r.status }}</span>
                         {% endif %}
@@ -74,7 +74,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="/run/{{ r.id }}" class="btn btn-secondary" style="padding: 0.2rem 0.5rem; font-size: 0.85rem;">View Results</a>
+                        <a href="/run/{{ r.id }}" class="btn btn-primary">View Results</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -94,7 +94,7 @@
                     {% if r.status == 'RUNNING' %}
                     <span class="badge badge-info">Running</span>
                     {% elif r.status == 'COMPLETED' %}
-                    <span class="badge badge-success">Completed</span>
+                    <span class="badge badge-success">COMPLETED</span>
                     {% else %}
                     <span class="badge badge-neutral">{{ r.status }}</span>
                     {% endif %}
@@ -113,7 +113,7 @@
                     <span class="text-muted">Checks pending...</span>
                 {% endif %}
                 </div>
-                <a href="/run/{{ r.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; flex-shrink: 0;">View Results</a>
+                <a href="/run/{{ r.id }}" class="btn btn-primary">View Results</a>
             </div>
         </div>
         {% endfor %}

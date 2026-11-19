@@ -1,104 +1,659 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% block page_title %}{{ project.name }}{% endblock %}
-
-{% block topbar_actions %}
-<a href="/project/{{ project.id }}/dry-run" class="btn btn-primary">Run QA Test</a>
-{% endblock %}
-
-{% block content %}
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr)); gap: 24px; margin-bottom: 32px;">
-    <div class="card" style="margin-bottom: 0;">
-        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">Platform Details</h3>
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg> <strong>Website</strong>
-                </div>
-                <div style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
-                    <a href="{{ project.target_url }}" target="_blank" style="color: var(--primary); text-decoration: none;" class="text-mono">{{ project.target_url }}</a>
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg> <strong>Environment</strong>
-                </div>
-                <div style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
-                    {{ project.environment }}
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg> <strong>Tester</strong>
-                </div>
-                <div style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
-                    {{ project.tester_name }}
-                </div>
-            </div>
-            
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <div style="width: 140px; flex-shrink: 0; color: var(--text-secondary); display: flex; align-items: center; gap: 8px;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg> <strong>Created</strong>
-                </div>
-                <div class="text-muted" style="flex: 1 1 200px; min-width: 0; word-break: break-word; overflow-wrap: anywhere;">
-                    {{ project.created_at_local }}
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div class="card" style="margin-bottom: 0;">
-        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">Quick Actions</h3>
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <a href="/project/{{ project.id }}/dry-run" class="btn btn-primary" style="width: 100%; justify-content: flex-start;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"></circle></svg> Run QA Test</a>
-            <a href="/findings?project_id={{ project.id }}&filter=open" class="btn btn-secondary" style="width: 100%; justify-content: flex-start;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg> View Open Findings</a>
-            <a href="/history?project_id={{ project.id }}" class="btn btn-outline" style="width: 100%; justify-content: flex-start;"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 8px;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> View Project History</a>
-        </div>
-    </div>
+{% block content %}<div class="breadcrumbs">
+<a href="/projects">Projects</a>
+<span>/</span>
+<span>{{ project.name }}</span>
 </div>
-
-<h3 style="margin-bottom: 16px; font-size: 1.25rem;">Recent QA Runs</h3>
-{% if runs %}
-<div class="card" style="padding: 0; overflow-x: auto; width: 100%;">
-    <table class="table" style="margin: 0;">
-        <thead>
-            <tr>
-                <th>Run ID</th>
-                <th>Status</th>
-                <th>Started</th>
-                <th style="width: 1%;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for r in runs %}
-            <tr>
-                <td style="font-weight: 500;">{{ r.id }}</td>
-                <td>
-                    {% if r.status == 'RUNNING' %}
-                    <span class="badge badge-info">Running</span>
-                    {% elif r.status == 'COMPLETED' %}
-                    <span class="badge badge-success">Completed</span>
-                    {% else %}
-                    <span class="badge badge-neutral">{{ r.status }}</span>
-                    {% endif %}
-                </td>
-                <td class="text-muted">{{ r.start_time_local }}</td>
-                <td><a href="/run/{{ r.id }}" class="btn btn-secondary" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">View Results</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="workspace-meta">
+<span class="badge badge-info">{{ project.environment }}</span>
+<span>{{ project.target_url }}</span>
+<span>Tester: {{ project.tester_name }}</span>
+<span class="text-muted">Created {{ project.created_at_local }}</span>
 </div>
+<nav class="workspace-nav" aria-label="Project workspace">
+<a href="/project/{{ project.id }}" aria-current="page">Overview &amp; runs</a>
+<a href="/project/{{ project.id }}/dry-run">New test setup</a>
+{% if pending_resources %}<a href="#pending-resources" style="color:#d97706;font-weight:700;">Pending resources ({{ pending_resources|length }})</a>{% endif %}
+<a href="#contracts">Validation rules ({{ contracts|length }})</a>
+<a href="#settings">Settings</a>
+</nav>
+{% if latest_completed %}<section class="panel outcome">
+<div class="eyebrow">Latest completed run</div>
+<h2>Run #{{ latest_completed.id }} is ready to review</h2>
+<p>{{ latest_completed.start_time_local }} · Execution completed; open the summary to check findings and coverage.</p>
+<a class="btn btn-primary" id="latest-results" href="/run/{{ latest_completed.id }}">View latest results</a>
+</section>{% else %}<section class="panel">
+<h2>No completed results yet</h2>
+<p>Start a test to build this project's review history.</p>
+<a class="btn btn-primary" href="/project/{{ project.id }}/dry-run">Start New QA Test</a>
+</section>{% endif %}
+<section class="panel">
+<div class="panel-heading">
+<h2>All runs</h2>
+<span class="text-muted">{{ runs|length }} recorded runs</span>
+</div>
+<ul class="row-list">{% for r in runs %}<li>
+<div class="row-main">
+<strong>Run #{{ r.id }} <span class="badge {{ 'badge-success' if r.status == 'COMPLETED' else 'badge-danger' if r.status == 'FAILED' else 'badge-warning' }}">{{ r.status }}</span>
+</strong>
+<p>{{ r.start_time_local }}</p>
+</div>
+<div class="actions">
+<a class="btn btn-primary" href="/run/{{ r.id }}">{{ 'View progress' if r.status == 'RUNNING' else 'View results' }}</a>{% if r.status != 'RUNNING' %}<a class="btn btn-report" href="/run/{{ r.id }}?tab=reports">Reports</a>{% endif %}</div>
+</li>{% else %}<li>No runs recorded.</li>{% endfor %}</ul>
+</section>
+{% if pending_resources %}
+<section class="panel" id="pending-resources" style="border: 1px solid #fde047; border-left: 5px solid #d97706; background: #fffbeb;">
+<div class="panel-heading">
+<div>
+<h2 style="color:#92400e;margin:0;">Pending Test Resources ({{ pending_resources|length }})</h2>
+<p class="text-muted" style="color:#78350f;margin:4px 0 0;">Resources created during state-changing test workflows that require manual verification or cleanup on the target server.</p>
+</div>
+</div>
+<ul class="row-list" style="background:#ffffff;border:1px solid #fef08a;border-radius:6px;padding:0 12px;margin:12px 0;">
+{% for res in pending_resources %}
+<li style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #fef9c3;">
+<div style="min-width:0;padding-right:12px;">
+<strong style="display:block;font-size:14px;color:#1e293b;">{{ res.entity_name }}</strong>
+<span class="text-muted" style="font-size:12px;">Type: {{ res.entity_type }} · Status: {{ res.status }} · Remote ID: {{ res.remote_entity_id or 'Unconfirmed' }} · Target: {{ res.target_url }}</span>
+</div>
+<button class="btn btn-secondary btn-sm" onclick="resolveProjectResource({{ res.id }})" style="font-size:12px;padding:4px 10px;min-height:30px;">Acknowledge manually</button>
+</li>
+{% endfor %}
+</ul>
+</section>
+{% endif %}
+
+<section class="panel" id="contracts">
+<div class="panel-heading">
+<div>
+<h2>Validation Rules &amp; Contracts</h2>
+<span class="text-muted">{{ contracts|length }} configured rules</span>
+</div>
+<button class="btn btn-primary btn-sm" id="btnOpenAddRuleModal" onclick="openAddRuleModal()">+ Add Rule</button>
+</div>
+<p class="text-muted">Domain validation rules allow QA Tester to accurately verify form field constraints, custom error messages, and submission outcomes on this website without hidden default assumptions.</p>
+{% if contracts %}
+<ul class="row-list" style="margin-top:12px;">
+{% for c in contracts %}
+<li class="contract-row" data-contract-id="{{ c.contract_id }}" data-config-valid="{{ 'true' if c.config_valid else 'false' }}" style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;{% if not c.config_valid %}border:1px solid #fca5a5;border-left:5px solid #dc2626;background:#fef2f2;padding:12px;border-radius:6px;margin-bottom:8px;{% endif %}">
+<div class="row-main" style="flex:1;min-width:0;">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+<strong>{{ c.rule_name }}</strong>
+<span class="badge badge-info">{{ c.contract_id }}</span>
+{% if c.config_valid %}
+<span class="badge badge-success">VALID CONTRACT</span>
+<span class="badge badge-neutral">{{ c.field_selectors|length }} field{{ '' if c.field_selectors|length == 1 else 's' }} · {{ c.positive_count }} positive / {{ c.negative_count }} negative case{{ '' if (c.positive_count + c.negative_count) == 1 else 's' }}</span>
 {% else %}
-<div class="card" style="text-align: center; padding: 60px 40px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--gray-400); display: flex; flex-direction: column; align-items: center; gap: 16px;">
-    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--gray-400);"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-    <div>
-        <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; color: var(--text-primary);">No QA runs exist</h3>
-        <p style="margin: 0 0 20px 0; font-size: 0.95rem;">You haven't run any tests for this project yet.</p>
-        <a href="/project/{{ project.id }}/dry-run" class="btn btn-primary">Start First QA Test</a>
-    </div>
+<span class="badge badge-danger">NEEDS REVIEW / INVALID CONFIG</span>
+{% endif %}
+</div>
+<p class="text-muted" style="font-size:12px;margin:4px 0 0;">Pattern: <code>{{ c.target_url_pattern or '*' }}</code> · Trigger: <code>{{ c.target_control_id or c.accessible_name or c.trigger_selector or 'Missing' }}</code> · Feedback: <code>{{ c.feedback_selector or 'Missing' }}</code>{% if c.completion_mode %} · Completion: <code>{{ c.completion_mode }}</code>{% endif %}</p>
+{% if c.config_valid and c.field_selectors %}
+<p class="text-muted" style="font-size:12px;margin:2px 0 0;">Mapped fields: {% for fk, fsel in c.field_selectors.items() %}<code>{{ fk }}</code> &rarr; <code>{{ fsel }}</code>{% if not loop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+{% if not c.config_valid %}
+<div class="legacy-contract-warning" style="margin-top:8px;padding:8px 10px;background:#ffffff;border:1px solid #fecaca;border-radius:4px;color:#991b1b;font-size:12px;">
+<strong>Manual review required (never auto-migrated):</strong> {{ c.config_error }}
+<div style="margin-top:4px;color:#7f1d1d;">QA runs are blocked while an unreviewed or misconfigured rule exists. Click <strong>Review &amp; Replace</strong> to configure explicit form fields and test cases, or delete this rule.</div>
 </div>
 {% endif %}
-{% endblock %}
+</div>
+<div class="actions" style="display:flex;gap:6px;flex-shrink:0;">
+{% if not c.config_valid %}
+<button class="btn btn-secondary btn-sm" type="button" onclick='reviewLegacyContract({{ c.id }}, {{ c.contract_id|tojson }}, {{ c.rule_name|tojson }}, {{ (c.target_url_pattern or "")|tojson }}, {{ (c.target_control_id or "")|tojson }}, {{ (c.accessible_name or "")|tojson }}, {{ (c.feedback_selector or "")|tojson }}, {{ (c.completion_mode or "loading_transition")|tojson }})' style="font-size:12px;padding:4px 10px;min-height:30px;">Review &amp; Replace</button>
+{% endif %}
+<button class="btn btn-danger btn-sm" type="button" onclick="deleteContract({{ c.id }})" style="font-size:12px;padding:4px 10px;min-height:30px;">Delete</button>
+</div>
+</li>
+{% endfor %}
+</ul>
+{% else %}
+<p class="empty-inline" style="margin-top:10px;">No custom validation rules configured yet. QA Tester evaluates standard interactive controls and reports missing domain rules as limited coverage.</p>
+{% endif %}
+</section>
+
+<section class="panel" id="settings">
+<div class="panel-heading">
+<h2>Project settings</h2>
+<button class="btn btn-secondary" onclick="openDialog('editProjectModal')">Edit Project</button>
+</div>
+<p class="text-muted">Update the website and tester for future runs.</p>
+<details>
+<summary class="destructive-summary">Delete this project</summary>
+<p>This permanently removes the project and all its runs, findings and evidence.</p>
+<button class="btn btn-danger" onclick="openDialog('deleteProjectModal')">Delete Project</button>
+</details>
+</section>
+
+<div class="modal" id="addContractModal">
+<form class="panel" style="max-width:760px;max-height:90vh;overflow-y:auto;" novalidate onsubmit="event.preventDefault();submitAddContract()">
+<input type="hidden" id="c_replace_id" value="">
+<h2 id="addContractModalTitle">Configure Validation Rule</h2>
+<p class="text-muted" style="font-size:13px;margin-bottom:12px;">Define the form fields, positive and negative test cases, expected feedback, and completion condition for this validation rule.</p>
+
+<div id="contractReplaceNotice" hidden style="margin-bottom:12px;padding:10px 12px;background:#fffbeb;border:1px solid #fde047;border-left:4px solid #d97706;border-radius:6px;color:#78350f;font-size:12px;"></div>
+<div id="contractFormError" role="alert" hidden style="margin-bottom:12px;padding:10px 12px;background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #dc2626;border-radius:6px;color:#991b1b;font-size:13px;font-weight:600;"></div>
+
+<fieldset style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;">
+<legend style="font-weight:700;font-size:13px;padding:0 6px;">1. Rule Identity &amp; Form Trigger</legend>
+<div class="field-grid">
+<div class="form-group">
+<label for="c_id">Rule ID <span style="color:var(--danger)">*</span></label>
+<input class="form-control" id="c_id" placeholder="e.g. work-history-date-rule">
+</div>
+<div class="form-group">
+<label for="c_name">Rule Name <span style="color:var(--danger)">*</span></label>
+<input class="form-control" id="c_name" placeholder="e.g. Work History Date Order">
+</div>
+</div>
+<div class="form-group">
+<label for="c_url">Target URL Pattern</label>
+<input class="form-control" id="c_url" placeholder="e.g. */profile* or {{ project.target_url }}*">
+</div>
+<div class="field-grid">
+<div class="form-group">
+<label for="c_ctrl">Trigger Button ID</label>
+<input class="form-control" id="c_ctrl" placeholder="e.g. btn-validate-history">
+</div>
+<div class="form-group">
+<label for="c_acc">Trigger Accessible Name (Button label)</label>
+<input class="form-control" id="c_acc" placeholder="e.g. Validate Work History Dates">
+</div>
+</div>
+<div class="form-group" style="margin-bottom:0;">
+<label for="c_fb">Feedback Element CSS Selector <span style="color:var(--danger)">*</span></label>
+<input class="form-control" id="c_fb" placeholder="e.g. #history-date-feedback or .validation-alert">
+<span class="text-muted" style="font-size:11px;">Element where validation error or acceptance messages appear after clicking the trigger button.</span>
+</div>
+</fieldset>
+
+<fieldset style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;">
+<legend style="font-weight:700;font-size:13px;padding:0 6px;">2. Form Fields to Populate <span style="color:var(--danger)">*</span></legend>
+<p class="text-muted" style="font-size:12px;margin:0 0 8px;">Map each logical field name to its CSS selector on the page (for example <code>start_date</code> &rarr; <code>#input-start-date</code>).</p>
+<div id="fieldRowsContainer"></div>
+<button class="btn btn-secondary btn-sm" type="button" id="btnAddFieldRow" onclick="addFieldRow('','')" style="margin-top:6px;">+ Add Form Field</button>
+</fieldset>
+
+<fieldset style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;">
+<legend style="font-weight:700;font-size:13px;padding:0 6px;">3. Positive &amp; Negative Test Cases <span style="color:var(--danger)">*</span></legend>
+<p class="text-muted" style="font-size:12px;margin:0 0 8px;">Define the input values to test, whether the input should be rejected (Negative) or accepted (Positive), and the expected feedback text.</p>
+<div id="caseRowsContainer"></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;">
+<button class="btn btn-secondary btn-sm" type="button" id="btnAddNegativeCase" onclick="addCaseRow(false)">+ Add Negative Case (Invalid Input)</button>
+<button class="btn btn-secondary btn-sm" type="button" id="btnAddPositiveCase" onclick="addCaseRow(true)">+ Add Positive Case (Valid Input)</button>
+</div>
+</fieldset>
+
+<fieldset style="border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;">
+<legend style="font-weight:700;font-size:13px;padding:0 6px;">4. Completion &amp; Freshness Condition <span style="color:var(--danger)">*</span></legend>
+<div class="form-group">
+<label for="c_mode">Completion Verification Mode</label>
+<select class="form-control" id="c_mode" onchange="onCompletionModeChange()">
+<option value="loading_transition" selected>Loading / DOM transition (Wait for UI state update)</option>
+<option value="case_marker">DOM Case Marker Attribute (Verify attribute matches Case ID)</option>
+<option value="timestamp">DOM Timestamp Attribute (Verify timestamp attribute updates)</option>
+<option value="token">DOM Token / Nonce Attribute (Verify token attribute updates)</option>
+</select>
+</div>
+<div class="field-grid">
+<div class="form-group" id="c_marker_group">
+<label for="c_marker">Completion Marker Attribute (for <code>case_marker</code> / <code>token</code>)</label>
+<input id="c_marker" class="form-control" placeholder="e.g. data-validation-case" oninput="syncVisualBuilderToJson()">
+</div>
+<div class="form-group" id="c_timestamp_group">
+<label for="c_timestamp">Completion Timestamp Attribute (for <code>timestamp</code>)</label>
+<input id="c_timestamp" class="form-control" placeholder="e.g. data-validation-timestamp" oninput="syncVisualBuilderToJson()">
+</div>
+</div>
+</fieldset>
+
+<details id="contractJsonPreviewDetails" style="margin-bottom:14px;border:1px solid var(--border);border-radius:6px;padding:8px 12px;">
+<summary style="cursor:pointer;font-size:12px;font-weight:600;color:#475569;">Inspect generated contract JSON</summary>
+<div style="margin-top:10px;">
+<div class="form-group"><label for="c_fields">Field selectors (JSON)</label><textarea id="c_fields" readonly class="form-control" rows="2" placeholder='{"email":"#email"}'></textarea></div>
+<div class="form-group" style="margin-bottom:0;"><label for="c_cases">Test cases (JSON)</label><textarea id="c_cases" readonly class="form-control" rows="4" placeholder='[{"case_id":"invalid","description":"Invalid email","input_values":{"email":"bad"},"expected_valid":false,"expected_feedback_substring":"Invalid email"}]'></textarea></div>
+</div>
+</details>
+
+<div class="actions">
+<button class="btn btn-secondary" type="button" onclick="closeDialog('addContractModal')">Cancel</button>
+<button class="btn btn-primary" id="btnSaveValidationRule" type="submit">Save Validation Rule</button>
+</div>
+</form>
+</div>
+
+<div class="modal" id="editProjectModal">
+<form class="panel" onsubmit="event.preventDefault();submitEditProject()">
+<h2>Edit Project</h2>{% for id,label,value,type in [('e_name','Project name',project.name,'text'),('e_url','Website URL',project.target_url,'url'),('e_env','Environment',project.environment,'text'),('e_tester','Tester',project.tester_name,'text')] %}<div class="form-group">
+<label for="{{ id }}">{{ label }}</label>
+<input class="form-control" id="{{ id }}" value="{{ value }}" type="{{ type }}" required>
+</div>{% endfor %}<div class="actions">
+<button class="btn btn-secondary" type="button" onclick="closeDialog('editProjectModal')">Cancel</button>
+<button class="btn btn-primary" type="submit">Save Changes</button>
+</div>
+</form>
+</div>
+<div class="modal" id="deleteProjectModal">
+<div class="panel">
+<h2>Delete {{ project.name }}?</h2>
+<p>All runs, findings and evidence will be removed permanently. This cannot be undone.</p>
+<div class="actions">
+<button class="btn btn-secondary" onclick="closeDialog('deleteProjectModal')">Cancel</button>
+<button class="btn btn-danger" onclick="submitDeleteProject()">Permanently delete project</button>
+</div>
+</div>
+</div>
+<script>
+let builderDirectJsonEdited = false;
+
+function showContractError(msg) {
+    const el = document.getElementById('contractFormError');
+    if (!el) return;
+    if (!msg) {
+        el.hidden = true;
+        el.textContent = '';
+    } else {
+        el.textContent = msg;
+        el.hidden = false;
+    }
+}
+
+function getDefinedFieldsFromRows() {
+    const rows = document.querySelectorAll('#fieldRowsContainer .rule-field-row');
+    const fields = Object.create(null);
+    rows.forEach(r => {
+        const k = (r.querySelector('.rule-field-key')?.value || '').trim();
+        const v = (r.querySelector('.rule-field-selector')?.value || '').trim();
+        if (k) fields[k] = v;
+    });
+    return fields;
+}
+
+function addFieldRow(fieldKey = '', selectorVal = '') {
+    builderDirectJsonEdited = false;
+    const container = document.getElementById('fieldRowsContainer');
+    const row = document.createElement('div');
+    row.className = 'rule-field-row';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 1.4fr auto;gap:8px;align-items:center;margin-bottom:6px;';
+    row.innerHTML = `
+        <input type="text" class="form-control rule-field-key" placeholder="Field name (e.g. email)" value="">
+        <input type="text" class="form-control rule-field-selector" placeholder="CSS selector (e.g. #input-email)" value="">
+        <button type="button" class="btn btn-danger btn-sm" style="padding:4px 8px;min-height:32px;" title="Remove field">&times;</button>
+    `;
+    const keyInput = row.querySelector('.rule-field-key');
+    const selInput = row.querySelector('.rule-field-selector');
+    keyInput.value = fieldKey;
+    selInput.value = selectorVal;
+    keyInput.addEventListener('input', () => { refreshCaseFieldInputs(); syncVisualBuilderToJson(); });
+    selInput.addEventListener('input', () => { syncVisualBuilderToJson(); });
+    row.querySelector('button').addEventListener('click', () => {
+        row.remove();
+        refreshCaseFieldInputs();
+        syncVisualBuilderToJson();
+    });
+    container.appendChild(row);
+    refreshCaseFieldInputs();
+    syncVisualBuilderToJson();
+}
+
+function refreshCaseFieldInputs() {
+    const fieldRows = Array.from(document.querySelectorAll('#fieldRowsContainer .rule-field-row'));
+    const fieldKeys = fieldRows.map(r => (r.querySelector('.rule-field-key')?.value || '').trim()).filter(Boolean);
+    const caseCards = document.querySelectorAll('#caseRowsContainer .rule-case-card');
+    caseCards.forEach(card => {
+        const inputsContainer = card.querySelector('.rule-case-inputs');
+        const currentVals = Object.create(null);
+        inputsContainer.querySelectorAll('.rule-case-field-input').forEach(inp => {
+            currentVals[inp.dataset.fieldKey] = inp.value;
+        });
+        inputsContainer.innerHTML = '';
+        if (fieldKeys.length === 0) {
+            const note = document.createElement('p');
+            note.className = 'text-muted';
+            note.style.cssText = 'font-size:12px;margin:4px 0;';
+            note.textContent = 'Add at least one form field in Step 2 to enter test values.';
+            inputsContainer.appendChild(note);
+            return;
+        }
+        fieldKeys.forEach(fk => {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin-bottom:4px;';
+            const lbl = document.createElement('label');
+            lbl.style.cssText = 'font-size:12px;font-weight:600;margin:0;overflow:hidden;text-overflow:ellipsis;';
+            lbl.textContent = fk + ':';
+            const inp = document.createElement('input');
+            inp.type = 'text';
+            inp.className = 'form-control rule-case-field-input';
+            inp.dataset.fieldKey = fk;
+            inp.placeholder = 'Test value for ' + fk;
+            inp.value = currentVals[fk] !== undefined ? currentVals[fk] : '';
+            inp.addEventListener('input', () => syncVisualBuilderToJson());
+            wrap.appendChild(lbl);
+            wrap.appendChild(inp);
+            inputsContainer.appendChild(wrap);
+        });
+    });
+}
+
+function addCaseRow(expectedValid = false, preset = null) {
+    builderDirectJsonEdited = false;
+    const container = document.getElementById('caseRowsContainer');
+    const idx = container.querySelectorAll('.rule-case-card').length + 1;
+    const defaultId = preset?.case_id || (expectedValid ? `case_valid_${idx}` : `case_invalid_${idx}`);
+    const defaultDesc = preset?.description || (expectedValid ? 'Valid input accepted' : 'Invalid input rejected with error');
+    const defaultFb = preset?.expected_feedback_substring || '';
+    const defaultAbsent = Boolean(preset?.expected_feedback_absent);
+
+    const card = document.createElement('div');
+    card.className = 'rule-case-card';
+    card.style.cssText = 'border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px;background:#f8fafc;';
+    card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;">
+            <strong class="rule-case-badge" style="font-size:12px;"></strong>
+            <button type="button" class="btn btn-danger btn-sm rule-case-remove" style="padding:2px 8px;min-height:26px;font-size:11px;">Remove Case</button>
+        </div>
+        <div class="field-grid" style="margin-bottom:6px;">
+            <div class="form-group" style="margin-bottom:4px;">
+                <label style="font-size:12px;">Case ID <span style="color:var(--danger)">*</span></label>
+                <input type="text" class="form-control rule-case-id" placeholder="e.g. case_invalid_1">
+            </div>
+            <div class="form-group" style="margin-bottom:4px;">
+                <label style="font-size:12px;">Expected Outcome <span style="color:var(--danger)">*</span></label>
+                <select class="form-control rule-case-expected">
+                    <option value="false">Negative case (Invalid input &rarr; Expect error)</option>
+                    <option value="true">Positive case (Valid input &rarr; Expect valid)</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:6px;">
+            <label style="font-size:12px;">Case Description <span style="color:var(--danger)">*</span></label>
+            <input type="text" class="form-control rule-case-desc" placeholder="Describe what this test case verifies">
+        </div>
+        <div style="margin-bottom:6px;">
+            <label style="font-size:12px;font-weight:600;display:block;margin-bottom:4px;">Field Input Values <span style="color:var(--danger)">*</span></label>
+            <div class="rule-case-inputs"></div>
+        </div>
+        <div class="field-grid" style="align-items:end;">
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:12px;">Expected Feedback Text (Substring)</label>
+                <input type="text" class="form-control rule-case-feedback" placeholder="e.g. cannot be earlier than or Dates are valid">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="font-size:12px;display:flex;align-items:center;gap:6px;cursor:pointer;">
+                    <input type="checkbox" class="rule-case-absent">
+                    <span>Expect feedback hidden/empty (valid cases only)</span>
+                </label>
+            </div>
+        </div>
+    `;
+    const idInp = card.querySelector('.rule-case-id');
+    const expSel = card.querySelector('.rule-case-expected');
+    const descInp = card.querySelector('.rule-case-desc');
+    const fbInp = card.querySelector('.rule-case-feedback');
+    const absChk = card.querySelector('.rule-case-absent');
+    const badgeEl = card.querySelector('.rule-case-badge');
+
+    idInp.value = defaultId;
+    expSel.value = expectedValid ? 'true' : 'false';
+    descInp.value = defaultDesc;
+    fbInp.value = defaultFb;
+    absChk.checked = defaultAbsent;
+
+    function updateCardStyle() {
+        const isPos = expSel.value === 'true';
+        badgeEl.textContent = isPos ? 'POSITIVE TEST CASE (Valid Input)' : 'NEGATIVE TEST CASE (Invalid Input)';
+        badgeEl.style.color = isPos ? '#166534' : '#991b1b';
+        absChk.disabled = !isPos;
+        if (!isPos) absChk.checked = false;
+    }
+    updateCardStyle();
+
+    [idInp, descInp, fbInp].forEach(el => el.addEventListener('input', () => syncVisualBuilderToJson()));
+    expSel.addEventListener('change', () => { updateCardStyle(); syncVisualBuilderToJson(); });
+    absChk.addEventListener('change', () => syncVisualBuilderToJson());
+    card.querySelector('.rule-case-remove').addEventListener('click', () => {
+        card.remove();
+        syncVisualBuilderToJson();
+    });
+
+    container.appendChild(card);
+    refreshCaseFieldInputs();
+    if (preset && preset.input_values) {
+        card.querySelectorAll('.rule-case-field-input').forEach(inp => {
+            const k = inp.dataset.fieldKey;
+            if (preset.input_values[k] !== undefined) {
+                inp.value = preset.input_values[k];
+            }
+        });
+    }
+    syncVisualBuilderToJson();
+}
+
+function syncVisualBuilderToJson() {
+    if (builderDirectJsonEdited) return;
+    const fieldRows = document.querySelectorAll('#fieldRowsContainer .rule-field-row');
+    const fields = Object.create(null);
+    fieldRows.forEach(r => {
+        const k = (r.querySelector('.rule-field-key')?.value || '').trim();
+        const v = (r.querySelector('.rule-field-selector')?.value || '').trim();
+        if (k || v) fields[k] = v;
+    });
+
+    const caseCards = document.querySelectorAll('#caseRowsContainer .rule-case-card');
+    const cases = [];
+    caseCards.forEach(card => {
+        const cid = (card.querySelector('.rule-case-id')?.value || '').trim();
+        const expValid = card.querySelector('.rule-case-expected')?.value === 'true';
+        const desc = (card.querySelector('.rule-case-desc')?.value || '').trim();
+        const fb = (card.querySelector('.rule-case-feedback')?.value || '').trim();
+        const absent = Boolean(card.querySelector('.rule-case-absent')?.checked);
+        const inputValues = Object.create(null);
+        card.querySelectorAll('.rule-case-field-input').forEach(inp => {
+            inputValues[inp.dataset.fieldKey] = inp.value;
+        });
+        const tc = {
+            case_id: cid,
+            description: desc,
+            input_values: inputValues,
+            expected_valid: expValid
+        };
+        if (fb) tc.expected_feedback_substring = fb;
+        if (absent) tc.expected_feedback_absent = true;
+        cases.push(tc);
+    });
+
+    const cFieldsEl = document.getElementById('c_fields');
+    const cCasesEl = document.getElementById('c_cases');
+    if (cFieldsEl) cFieldsEl.value = JSON.stringify(fields);
+    if (cCasesEl) cCasesEl.value = JSON.stringify(cases);
+}
+
+function onCompletionModeChange() {
+    const mode = document.getElementById('c_mode')?.value || 'loading_transition';
+    const markerInput = document.getElementById('c_marker');
+    const tsInput = document.getElementById('c_timestamp');
+    if (markerInput) {
+        markerInput.required = (mode === 'case_marker' || mode === 'token');
+    }
+    if (tsInput) {
+        tsInput.required = (mode === 'timestamp');
+    }
+}
+
+function resetContractModal() {
+    showContractError('');
+    document.getElementById('c_replace_id').value = '';
+    document.getElementById('addContractModalTitle').textContent = 'Configure Validation Rule';
+    const repNotice = document.getElementById('contractReplaceNotice');
+    repNotice.hidden = true;
+    repNotice.textContent = '';
+    document.getElementById('c_id').value = '';
+    document.getElementById('c_name').value = '';
+    document.getElementById('c_url').value = '';
+    document.getElementById('c_ctrl').value = '';
+    document.getElementById('c_acc').value = '';
+    document.getElementById('c_fb').value = '';
+    document.getElementById('c_mode').value = 'loading_transition';
+    document.getElementById('c_marker').value = '';
+    document.getElementById('c_timestamp').value = '';
+    document.getElementById('fieldRowsContainer').innerHTML = '';
+    document.getElementById('caseRowsContainer').innerHTML = '';
+    builderDirectJsonEdited = false;
+    addFieldRow('', '');
+    addCaseRow(false);
+    onCompletionModeChange();
+}
+
+function openAddRuleModal() {
+    resetContractModal();
+    openDialog('addContractModal');
+}
+
+function reviewLegacyContract(rowId, contractId, ruleName, targetUrlPattern, ctrlId, accName, fbSel, compMode) {
+    resetContractModal();
+    document.getElementById('c_replace_id').value = String(rowId);
+    document.getElementById('addContractModalTitle').textContent = 'Review & Replace Legacy Validation Rule';
+    const repNotice = document.getElementById('contractReplaceNotice');
+    repNotice.textContent = `Reviewing rule "${ruleName}" (${contractId}). Automatic migration is disabled for safety — define explicit form fields and test cases below to replace the misconfigured rule.`;
+    repNotice.hidden = false;
+    document.getElementById('c_id').value = contractId || '';
+    document.getElementById('c_name').value = ruleName || '';
+    document.getElementById('c_url').value = targetUrlPattern || '';
+    document.getElementById('c_ctrl').value = ctrlId || '';
+    document.getElementById('c_acc').value = accName || '';
+    document.getElementById('c_fb').value = fbSel || '';
+    document.getElementById('c_mode').value = compMode || 'loading_transition';
+    onCompletionModeChange();
+    openDialog('addContractModal');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const cf = document.getElementById('c_fields');
+    const cc = document.getElementById('c_cases');
+    if (cf) cf.addEventListener('input', () => { builderDirectJsonEdited = true; });
+    if (cc) cc.addEventListener('input', () => { builderDirectJsonEdited = true; });
+    if (document.getElementById('fieldRowsContainer') && document.getElementById('fieldRowsContainer').children.length === 0) {
+        addFieldRow('', '');
+        addCaseRow(false);
+    }
+});
+
+async function submitEditProject(){try{const r=await fetch('/api/projects/{{ project.id }}/edit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('e_name').value,target_url:document.getElementById('e_url').value,environment:document.getElementById('e_env').value,tester_name:document.getElementById('e_tester').value})});if(!r.ok)throw Error('Could not save project');queueFeedback('Project saved');location.reload()}catch(e){showToast(e.message)}}
+async function submitDeleteProject(){try{const r=await fetch('/api/projects/{{ project.id }}/delete',{method:'POST'});if(!r.ok)throw Error('Could not delete project');queueFeedback('Project deleted');location.href='/projects'}catch(e){showToast(e.message)}}
+async function resolveProjectResource(id){const note=prompt('Manual acknowledgement does not confirm server deletion. Add your verification note:','');if(note===null)return;if(!note.trim()){showToast('A verification note is required.');return;}try{const r=await fetch('/api/projects/{{ project.id }}/pending-resources/'+id+'/resolve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({note:note.trim()})});if(!r.ok)throw Error('Could not mark resource as resolved');showToast('Resource marked as manually resolved.');setTimeout(()=>location.reload(),600)}catch(e){showToast(e.message)}}
+async function deleteContract(id){if(!confirm('Delete this validation rule?'))return;try{const r=await fetch('/api/projects/{{ project.id }}/contracts/'+id,{method:'DELETE'});if(!r.ok)throw Error('Could not delete validation rule');showToast('Validation rule deleted.');setTimeout(()=>location.reload(),600)}catch(e){showToast(e.message)}}
+
+async function submitAddContract() {
+    showContractError('');
+    try {
+        if (!builderDirectJsonEdited) {
+            syncVisualBuilderToJson();
+            const keys = Array.from(document.querySelectorAll('#fieldRowsContainer .rule-field-key')).map(el => el.value.trim());
+            if (new Set(keys).size !== keys.length) {
+                throw new Error('Each form field must have a unique Field Name.');
+            }
+        }
+        const contractId = document.getElementById('c_id').value.trim();
+        const ruleName = document.getElementById('c_name').value.trim();
+        const targetUrl = document.getElementById('c_url').value.trim() || null;
+        const ctrlId = document.getElementById('c_ctrl').value.trim() || null;
+        const accName = document.getElementById('c_acc').value.trim() || null;
+        const fbSel = document.getElementById('c_fb').value.trim() || null;
+        const compMode = document.getElementById('c_mode').value;
+        const markerAttr = document.getElementById('c_marker').value.trim() || null;
+        const tsAttr = document.getElementById('c_timestamp').value.trim() || null;
+        const replaceIdRaw = document.getElementById('c_replace_id').value.trim();
+
+        if (!contractId || !ruleName) {
+            throw new Error('Rule ID and Rule Name are required.');
+        }
+        if (!ctrlId && !accName) {
+            throw new Error('Specify either a Trigger Button ID or Trigger Accessible Name.');
+        }
+        if (!fbSel) {
+            throw new Error('Feedback Element CSS Selector is required (e.g. #history-date-feedback).');
+        }
+        if ((compMode === 'case_marker' || compMode === 'token') && !markerAttr) {
+            throw new Error(`Completion mode "${compMode}" requires a Completion Marker Attribute (e.g. data-validation-case).`);
+        }
+        if (compMode === 'timestamp' && !tsAttr) {
+            throw new Error('Completion mode "timestamp" requires a Completion Timestamp Attribute (e.g. data-validation-timestamp).');
+        }
+
+        let fieldSelectors, testCases;
+        try {
+            fieldSelectors = JSON.parse(document.getElementById('c_fields').value || '{}');
+        } catch (jsonErr) {
+            throw new Error('Field selectors JSON is malformed.');
+        }
+        try {
+            testCases = JSON.parse(document.getElementById('c_cases').value || '[]');
+        } catch (jsonErr) {
+            throw new Error('Test cases JSON is malformed.');
+        }
+
+        const fieldEntries = Object.entries(fieldSelectors || {});
+        if (fieldEntries.length === 0 || fieldEntries.some(([k, v]) => !k.trim() || !String(v || '').trim())) {
+            throw new Error('Add at least one form field with both a Field Name and CSS Selector.');
+        }
+        if (!Array.isArray(testCases) || testCases.length === 0) {
+            throw new Error('Add at least one positive or negative test case.');
+        }
+        if (new Set(testCases.map(tc => tc.case_id?.trim())).size !== testCases.length) {
+            throw new Error('Each test case must have a unique Case ID.');
+        }
+        for (const tc of testCases) {
+            if (!tc.case_id || !String(tc.case_id).trim()) {
+                throw new Error('Every test case requires a non-empty Case ID.');
+            }
+            if (!tc.description || !String(tc.description).trim()) {
+                throw new Error(`Test case "${tc.case_id}" requires a description.`);
+            }
+            if (!tc.input_values || typeof tc.input_values !== 'object' || Object.keys(tc.input_values).length === 0) {
+                throw new Error(`Test case "${tc.case_id}" requires input values mapped to the configured form fields.`);
+            }
+            for (const [fk, fval] of Object.entries(tc.input_values)) {
+                if (!(fk in fieldSelectors)) {
+                    throw new Error(`Test case "${tc.case_id}" references unknown field "${fk}".`);
+                }
+                // An empty string is intentional input for required-field tests.
+            }
+        }
+
+        const payload = {
+            contract_id: contractId,
+            rule_name: ruleName,
+            target_url_pattern: targetUrl,
+            target_control_id: ctrlId,
+            trigger_selector: ctrlId,
+            accessible_name: accName,
+            feedback_selector: fbSel,
+            completion_mode: compMode,
+            field_selectors: fieldSelectors,
+            test_cases: testCases,
+            completion_marker_attr: markerAttr,
+            completion_timestamp_attr: tsAttr
+        };
+        if (replaceIdRaw) {
+            payload.replace_row_id = parseInt(replaceIdRaw, 10);
+        }
+
+        const r = await fetch('/api/projects/{{ project.id }}/contracts', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        });
+        const respData = await r.json().catch(() => ({}));
+        if (!r.ok) {
+            throw new Error(respData.error || 'Could not create validation rule');
+        }
+        showToast(replaceIdRaw ? 'Validation rule reviewed and replaced.' : 'Validation rule added.');
+        setTimeout(() => location.reload(), 600);
+    } catch (e) {
+        showContractError(e.message);
+        showToast(e.message);
+    }
+}
+</script>{% endblock %}

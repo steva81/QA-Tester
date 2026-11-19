@@ -3,22 +3,53 @@ venv/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
 
-# Build output
+# Build output, packaged candidates & Windows installers
 build/
+build_candidate_*/
 dist/
 dist_locked/
+dist_candidate_*/
+dist_installer_*/
+*.exe
+*.msi
+*.zip
+*.vdi
+*.vbox
+*.vbox-prev
 
-# QA Tester runtime / private data
-data/
-screenshots/
-reports/
-exports/
-logs/
-settings/
+# QA Tester runtime, databases & private data
+/data/
+/screenshots/
+/reports/
+/exports/
+/logs/
+/settings/
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqlite
+*.sqlite3
+*.log
 test_db.sqlite
+test_acceptance_db.sqlite
 
-# Secrets
+# Secrets & local environment
 .env
 .env.*
+*.pem
+*.key
+*.pfx
+
+# Local scratch, internal audit evidence & agent handoff logs
+scratch/
+review_evidence/
+plan_full.txt
+ANTIGRAVITY_FIX_PLAN.md
+CODEX_*.md
+GEMINI_*.md
+DELIVERY_HANDOFF_*.md
+LOCAL_WINDOWS_CANDIDATE_UAT_REPORT_*.md

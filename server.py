@@ -27,6 +27,14 @@ def utility_processor():
 # Initialize database
 init_db()
 
+# Initialize security guards (DNS rebinding and cross-site request protection)
+from app.security import init_security
+init_security(app)
+
+# Initialize mutation request lifecycle lock
+from app.data_lifecycle import init_data_lifecycle
+init_data_lifecycle(app)
+
 from app.routes.api import api_bp
 from app.routes.views import views_bp
 from app.routes.exports import exports_bp

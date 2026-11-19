@@ -1,58 +1,177 @@
-{% extends "base.html" %}
-
-{% block page_title %}Run QA Test{% endblock %}
+{% extends 'base.html' %}
+{% block page_title %}Start New QA Test{% endblock %}
+{% block page_subtitle %}<p class="text-muted">Step 1 of 3 · Choose a saved project or enter a new target website to proceed into test setup.</p>{% endblock %}
 
 {% block content %}
-<div class="workflow">
-    <div class="workflow-step active">
-        <div class="workflow-step-icon">1</div>
-        <span>Select Project</span>
-    </div>
-    <div class="workflow-step">
-        <div class="workflow-step-icon">2</div>
-        <span>Review Test Plan</span>
-    </div>
-    <div class="workflow-step">
-        <div class="workflow-step-icon">3</div>
-        <span>Run Test</span>
-    </div>
-    <div class="workflow-step">
-        <div class="workflow-step-icon">4</div>
-        <span>Results</span>
-    </div>
+<div class="workflow-steps-nav" style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+  <div class="step-indicator step-active" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#e1f1ee;color:#0b4a45;border-radius:6px;font-weight:700;font-size:14px;">
+    <span>1</span>
+    <span>Choose Website or Project</span>
+  </div>
+  <div class="step-indicator" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;font-size:14px;">
+    <span>2</span>
+    <span>Browser Session &amp; Scope</span>
+  </div>
+  <div class="step-indicator" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;font-size:14px;">
+    <span>3</span>
+    <span>Review &amp; Start</span>
+  </div>
 </div>
 
-<div class="card" style="max-width: 600px; margin: 32px auto; padding: 32px; background: var(--surface);">
-    <h3 style="margin-top: 0; font-size: 1.5rem; margin-bottom: 24px; border-bottom: 1px solid var(--border); padding-bottom: 16px;">Select QA Project</h3>
-    
+<div class="grid-2">
+  <!-- Option A: Test a new website inline -->
+  <section class="panel" style="border-top: 4px solid var(--primary);">
+    <div class="panel-heading">
+      <div>
+        <h2>Test a new website</h2>
+        <p class="text-muted" style="margin:4px 0 0;">Create a project configuration and proceed directly to test setup.</p>
+      </div>
+    </div>
+    <form id="new-project-form" onsubmit="event.preventDefault();createProjectAndContinue();">
+      <div class="form-group">
+        <label for="new_proj_name">Project Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="new_proj_name" class="form-control" placeholder="e.g. Example App Smoke QA" required>
+      </div>
+      <div class="form-group">
+        <label for="new_proj_url">Target Website URL <span style="color:var(--danger)">*</span></label>
+        <input type="url" id="new_proj_url" class="form-control" placeholder="https://example.com" required>
+      </div>
+      <div class="field-grid">
+        <div class="form-group">
+          <label for="new_proj_env">Environment</label>
+          <select id="new_proj_env" class="form-control">
+            <option value="Localhost">Localhost</option>
+            <option value="Staging" selected>Staging</option>
+            <option value="Production">Production</option>
+            <option value="Development">Development</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new_proj_tester">Tester Name</label>
+          <input type="text" id="new_proj_tester" class="form-control" value="QA Tester" required>
+        </div>
+      </div>
+      <div id="new-proj-error" class="error" style="display:none;margin-bottom:12px;color:var(--danger);font-size:13px;" role="alert"></div>
+      <div class="actions" style="margin-top:16px;">
+        <button type="submit" id="btn-create-continue" class="btn btn-primary" style="width:100%;min-height:44px;">
+          Create &amp; continue to test setup →
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Option B: Choose a saved project -->
+  <section class="panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Select a saved project</h2>
+        <span class="text-muted" id="projectCountLabel">{% if projects %}{{ projects|length }} available{% else %}None{% endif %}</span>
+      </div>
+    </div>
+
     {% if projects %}
-    <div class="form-group" style="margin-bottom: 24px;">
-        <label style="font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Project:</label>
-        <select id="projectSelect" class="form-control" style="font-size: 1rem; padding: 0.6rem;">
-            <option value="">-- Select Project --</option>
-            {% for p in projects %}
-            <option value="{{ p.id }}">#{{ p.id }}: {{ p.name }} ({{ p.environment }})</option>
-            {% endfor %}
-        </select>
+    <div class="form-group" style="margin-bottom:16px;">
+      <input type="search" id="projectSearch" class="form-control" placeholder="Search projects by name, URL, or environment…" oninput="filterProjects()">
     </div>
-    <div style="display: flex; justify-content: flex-end;">
-        <button class="btn btn-primary" onclick="proceed()" style="padding: 0.6rem 1.5rem;">Next: Review Test Plan →</button>
+
+    <!-- Compact Recent Projects -->
+    <div style="margin-bottom:16px;">
+      <div class="eyebrow" style="margin-bottom:8px;">Recent Selection</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        {% for p in projects[:3] %}
+        <div class="recent-proj-item" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--gray-50);border:1px solid var(--border);border-radius:6px;">
+          <div style="min-width:0;padding-right:12px;">
+            <strong style="display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ p.name }}</strong>
+            <span class="text-muted" style="font-size:12px;">{{ p.environment }} · {{ p.target_url }}</span>
+          </div>
+          <a class="btn btn-secondary" style="min-height:34px;padding:4px 12px;font-size:13px;flex-shrink:0;" href="/project/{{ p.id }}/dry-run">Set up test →</a>
+        </div>
+        {% endfor %}
+      </div>
     </div>
+
+    <!-- Full Searchable List -->
+    <div class="eyebrow" style="margin-top:16px;margin-bottom:8px;">All Saved Projects</div>
+    <ul class="row-list" id="allProjectsList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:0 12px;">
+      {% for p in projects %}
+      <li class="project-list-item" data-search="{{ p.name|lower }} {{ p.target_url|lower }} {{ p.environment|lower }}">
+        <div class="row-main">
+          <strong>{{ p.name }}</strong>
+          <p>{{ p.environment }} · {{ p.target_url }}</p>
+        </div>
+        <a class="btn btn-secondary" style="min-height:34px;padding:4px 12px;font-size:13px;" href="/project/{{ p.id }}/dry-run">Set up test</a>
+      </li>
+      {% endfor %}
+    </ul>
     {% else %}
-    <div style="text-align: center; padding: 40px 20px;">
-        <p class="text-muted" style="margin-bottom: 20px;">No QA projects exist yet.</p>
-        <a href="/projects" class="btn btn-primary">Create QA Project</a>
+    <div class="empty">
+      <p>No saved projects yet. Enter your target website on the left to start testing.</p>
     </div>
     {% endif %}
+  </section>
 </div>
 
 <script>
-function proceed() {
-    const sel = document.getElementById('projectSelect');
-    if(sel.value) {
-        window.location.href = '/project/' + sel.value + '/dry-run';
-    } else {
-        alert("Please select a project.");
+function filterProjects() {
+    const q = (document.getElementById('projectSearch')?.value || '').toLowerCase().trim();
+    const items = document.querySelectorAll('.project-list-item');
+    let visible = 0;
+    items.forEach(el => {
+        const text = el.getAttribute('data-search') || '';
+        if (!q || text.includes(q)) {
+            el.style.display = 'flex';
+            visible++;
+        } else {
+            el.style.display = 'none';
+        }
+    });
+    const label = document.getElementById('projectCountLabel');
+    if (label) {
+        label.textContent = visible + ' match' + (visible === 1 ? '' : 'es');
+    }
+}
+
+async function createProjectAndContinue() {
+    const name = document.getElementById('new_proj_name').value.trim();
+    const url = document.getElementById('new_proj_url').value.trim();
+    const env = document.getElementById('new_proj_env').value;
+    const tester = document.getElementById('new_proj_tester').value.trim();
+    const errEl = document.getElementById('new-proj-error');
+    const btn = document.getElementById('btn-create-continue');
+
+    errEl.style.display = 'none';
+    if (!name || !url) {
+        errEl.textContent = 'Please provide both project name and target website URL.';
+        errEl.style.display = 'block';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Creating project…';
+
+    try {
+        const resp = await fetch('/api/projects', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: name,
+                target_url: url,
+                environment: env,
+                tester_name: tester
+            })
+        });
+        const data = await resp.json();
+        if (resp.ok && (data.id || data.project_id)) {
+            const newId = data.id || data.project_id;
+            window.location.href = '/project/' + newId + '/dry-run';
+        } else {
+            throw new Error(data.message || data.error || 'Failed to create project');
+        }
+    } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Create & continue to test setup →';
     }
 }
 </script>

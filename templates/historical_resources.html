@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block page_title %}Historical Resources{% endblock %}
+{% block page_subtitle %}
+<p class="text-muted">
+  Detached external resource ownership records from deleted projects or previous test cycles.
+</p>
+<div class="panel" style="margin-top: 1rem; border-left: 4px solid var(--warning-color, #e6a23c); background: var(--bg-surface-secondary, #fafafa); padding: 1rem;">
+  <strong>Important Disclosures:</strong>
+  <ul style="margin: 0.5rem 0 0 1.25rem;">
+    <li>These records do <strong>not</strong> belong to an active QA project workspace.</li>
+    <li>Automated recovery and automated cleanup do <strong>not</strong> run on historical resources.</li>
+    <li>Manual resolution records human tester verification in the audit journal; it does <strong>not</strong> prove server-side resource deletion.</li>
+  </ul>
+</div>
+{% endblock %}
+
+{% block topbar_actions %}
+<div class="actions">
+  <a class="btn {% if state == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}" href="/historical-resources?state=pending">Unresolved Only</a>
+  <a class="btn {% if state == 'all' %}btn-primary{% else %}btn-secondary{% endif %}" href="/historical-resources?state=all">All Historical Records</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="panel">
+  {% if records %}
+  <table class="table" style="width: 100%; border-collapse: collapse;">
+    <thead>
+      <tr style="text-align: left; border-bottom: 2px solid #ddd;">
+        <th style="padding: 0.5rem;">Record ID</th>
+        <th style="padding: 0.5rem;">Archive Key</th>
+        <th style="padding: 0.5rem;">Historical Project & Run</th>
+        <th style="padding: 0.5rem;">Entity Name / ID</th>
+        <th style="padding: 0.5rem;">Target URL</th>
+        <th style="padding: 0.5rem;">Status</th>
+        <th style="padding: 0.5rem;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in records %}
+      <tr style="border-bottom: 1px solid #eee;">
+        <td style="padding: 0.5rem;">#{{ r.record_id }}</td>
+        <td style="padding: 0.5rem; font-family: monospace; font-size: 0.85em;">{{ r.archive_project_key }}</td>
+        <td style="padding: 0.5rem;">
+          <strong>{{ r.original_project_name }}</strong><br>
+          <small class="text-muted">Orig Project ID: {{ r.original_project_id }} · Run: {{ r.original_run_id }}</small>
+        </td>
+        <td style="padding: 0.5rem;">
+          {{ r.entity_name }}<br>
+          <small class="text-muted">Type: {{ r.entity_type }} · Remote ID: {{ r.remote_entity_id or 'N/A' }}</small>
+        </td>
+        <td style="padding: 0.5rem; font-size: 0.85em;">{{ r.target_url }}</td>
+        <td style="padding: 0.5rem;">
+          <span class="badge">{{ r.status }}</span> / <span class="badge">{{ r.remote_status or 'N/A' }}</span>
+        </td>
+        <td style="padding: 0.5rem;">
+          {% if r.status not in ('DELETED', 'RESOLVED_MANUAL') and r.remote_status not in ('CONFIRMED_DELETED', 'MANUALLY_RESOLVED') %}
+          <div style="display: flex; gap: 0.25rem; align-items: center;">
+            <input type="text" id="note-{{ r.record_id }}" placeholder="Verification note..." style="padding: 0.25rem 0.5rem; font-size: 0.85em;">
+            <button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.85em;" onclick="resolveHistorical({{ r.record_id }}, '{{ r.archive_project_key }}')">Resolve</button>
+          </div>
+          {% else %}
+          <small class="text-muted">Resolved</small>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-muted" style="padding: 2rem; text-align: center;">No historical resource records found.</p>
+  {% endif %}
+</div>
+
+<script>
+async function resolveHistorical(recordId, archiveKey) {
+  const noteInput = document.getElementById('note-' + recordId);
+  const note = noteInput ? noteInput.value.trim() : '';
+  if (!note) {
+    alert('Please enter a non-empty verification note.');
+    return;
+  }
+  try {
+    const res = await fetch('/api/historical-resources/' + recordId + '/resolve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-QA-Request': '1'
+      },
+      body: JSON.stringify({
+        archive_project_key: archiveKey,
+        note: note
+      })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      window.location.reload();
+    } else {
+      alert('Error: ' + (data.error || data.message || 'Resolution failed'));
+    }
+  } catch (e) {
+    alert('Request failed: ' + e);
+  }
+}
+</script>
+{% endblock %}
+

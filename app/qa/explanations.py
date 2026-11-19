@@ -41,4 +41,41 @@ def get_explanations(status_code=None, actual_result="", area=""):
         expl_sv_learn = "En trasig intern länk innebär att en länk som pekar till en annan del av samma webbplats inte fungerar och leder till en felsida (ofta 404). Testet bekräftar att besökare kommer att fastna här, men vi vet inte om felet ligger i hur länken är skriven eller om målsidan har tagits bort."
         expl_sv_verbal = "Jag hittade en länk på sidan som leder till en felsida. Länken är död och behöver antagligen uppdateras."
 
+    elif "unsafe request prevented" in actual or "blocked by qa tester" in actual:
+        expl_en = "QA Tester actively prevented a potentially unsafe request (like a POST or DELETE) from executing on the live site to avoid accidental data changes. The QA test blocked it to be safe."
+        expl_sv_learn = "QA Tester stoppade aktivt en potentiellt farlig förfrågan (som en POST eller DELETE) från att köras mot den riktiga sidan för att undvika oavsiktliga ändringar av data. Testet blockerade detta för säkerhets skull."
+        expl_sv_verbal = "QA Tester blockerade en förfrågan som kunde ha ändrat data på webbplatsen."
+
+    elif "err_failed" in actual:
+        expl_en = "The browser could not complete a network request. In this case QA Tester had just blocked an unsafe POST request, so this is probably a consequence of QA Tester's safety protection rather than a separate website bug."
+        expl_sv_learn = "Webbläsaren kunde inte slutföra en nätverksförfrågan. Om detta hände strax efter att QA Tester blockerade en förfrågan, så beror felet troligtvis på blockeringen och inte på en bugg i webbplatsen."
+        expl_sv_verbal = "En nätverksförfrågan misslyckades. Om QA Tester just blockerade en förfrågan kan detta fel bero på säkerhetsspärren."
+
+    elif "missing form label" in actual:
+        expl_en = "A form input field on this page does not have an associated text label or accessibility description. Screen reader users might not know what to type into the field, and clicking a label won't focus it. The QA test detected an input without a label, but manual review is required to locate the exact field and confirm its context."
+        expl_sv_learn = "Ett inmatningsfält på sidan saknar en tillhörande textetikett (<label>) eller tillgänglighetsbeskrivning. För användare med skärmläsare blir det svårt att förstå vad fältet ska användas till. Testet upptäckte att ett fält saknar etikett, men manuell granskning behövs för att hitta fältet och avgöra hur användarna påverkas."
+        expl_sv_verbal = "Jag hittade ett inmatningsfält på sidan som saknar en tydlig etikett. Det gör sidan svårare att använda för personer med skärmläsare, och vi behöver undersöka vilket fält det gäller."
+
+    elif "missing or empty document title" in actual or "missing document title" in actual:
+        expl_en = "The webpage is missing a <title> tag in its <head> section, or the title tag is empty. Without a document title, the browser tab, bookmarks, and search results cannot display a descriptive name for the page. The QA test confirmed the <title> is absent or blank, but human review is recommended to choose an appropriate page title."
+        expl_sv_learn = "Webbsidan saknar en <title>-tagg i <head>-sektionen, eller så är titeln helt tom. Utan en dokumenttitel visar webbläsarfliken, bokmärken och sökmotorer inget begripligt namn för sidan. QA-testet bekräftar att titeln saknas eller är tom, men en mänsklig granskare bör välja en lämplig och beskrivande titel."
+        expl_sv_verbal = "Sidan saknar en sidtitel i webbläsaren. Det gör att fliken i webbläsaren inte visar vad sidan handlar om."
+
+    elif "dangling_aria_controls" in actual or "element was not found in the dom" in actual or "nonexistent-target-element" in actual:
+        expl_en = "An interactive disclosure control references a non-existent element via aria-controls. Screen reader users and assistive technologies receive broken accessibility references, and the associated content panel cannot be found."
+        expl_sv_learn = "En interaktiv expanderbar kontroll refererar till ett element som inte finns i sidans DOM (via aria-controls). Detta gör att skärmläsare och hjälpmedel tappar kopplingen till innehållet som ska styras."
+        expl_sv_verbal = "Knappen refererar till ett innehållselement som saknas i koden. Det gör att det inte går att hitta eller styra innehållet."
+
+    elif "content_not_revealed" in actual or "remained hidden" in actual or "panel-unrevealed" in actual:
+        expl_en = "An expandable control updated its state to expanded, but the target content remained hidden. Users who activate the control see no visible content or feedback."
+        expl_sv_learn = "En knapp indikerar att innehållet har expanderats, men själva innehållspanelen förblir dold. Användare som klickar på knappen ser inget nytt innehåll."
+        expl_sv_verbal = "Knappen ändrar sitt tillstånd till expanderad, men innehållet visas inte utan fortsätter att vara dolt."
+
+    elif "page_script_error" in actual or "during click, leaving control inert" in actual or "typeerror" in actual:
+        expl_en = "An uncaught JavaScript exception occurred when activating the control, leaving it inert and preventing the intended state change."
+        expl_sv_learn = "Ett oväntat JavaScript-fel uppstod när knappen klickades, vilket kraschade skriptet och hindrade innehållet från att öppnas."
+        expl_sv_verbal = "När knappen klickades uppstod ett JavaScript-fel som gjorde att knappen slutade fungera."
+
     return expl_en, expl_sv_learn, expl_sv_verbal
+
+

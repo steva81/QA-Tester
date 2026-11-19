@@ -1,5 +1,11 @@
 flask==3.0.3
-playwright==1.42.0
+playwright==1.64.1
 pywebview==4.4.1
-pytest==8.1.1
+pytest==9.1.1
 python-dotenv==1.0.1
+graphql-core==3.2.8
+python-docx==1.2.0
+pillow==12.3.0
+pythonnet==3.2.1
+clr-loader==0.3.1
+pyinstaller==6.22.3

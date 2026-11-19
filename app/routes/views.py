@@ -11,55 +11,80 @@ NEEDS_REVIEW_CONDITION = "(f.review_status = 'Pending review' OR f.review_status
 def index():
     conn = get_db_connection()
     c = conn.cursor()
-    c.execute("SELECT count(*) as count FROM projects")
-    projects_count = c.fetchone()['count']
+    from app.utils import format_local_time
     
-    c.execute("SELECT count(*) as count FROM runs")
-    runs_count = c.fetchone()['count']
-    
-    c.execute("SELECT count(*) as count FROM findings WHERE status = 'OPEN'")
-    open_findings = c.fetchone()['count']
-    
-    c.execute(f"SELECT count(*) as count FROM findings f WHERE {NEEDS_REVIEW_CONDITION}")
-    needs_review = c.fetchone()['count']
-    
-    # Needs attention list
-    c.execute(f'''
-        SELECT f.*, p.name as project_name 
-        FROM findings f
-        JOIN projects p ON f.project_id = p.id
-        WHERE {NEEDS_REVIEW_CONDITION}
-        ORDER BY f.timestamp DESC LIMIT 5
-    ''')
-    attention_items = c.fetchall()
-    
-    # Recent activity
+    # 1. Look for the most recent run for "Continue where you left off"
     c.execute('''
-        SELECT r.id, r.start_time, p.name as project_name,
+        SELECT r.id, r.project_id, r.status, r.start_time, p.name as project_name,
                (SELECT COUNT(*) FROM findings WHERE run_id = r.id) as finding_count
         FROM runs r
         JOIN projects p ON r.project_id = p.id
-        ORDER BY r.start_time DESC LIMIT 5
+        ORDER BY r.start_time DESC, r.id DESC
+        LIMIT 1
     ''')
-    recent_runs = c.fetchall()
+    latest_run = c.fetchone()
     
-    # Format times
-    from app.utils import format_local_time
-    recent_activity = []
-    for r in recent_runs:
-        r_dict = dict(r)
-        r_dict['time_str'] = format_local_time(r['start_time'])
-        recent_activity.append(r_dict)
-        
+    recent_activity = None
+    if latest_run:
+        r_dict = dict(latest_run)
+        time_str = format_local_time(r_dict['start_time'])
+        if r_dict['status'] == 'RUNNING':
+            status_text = 'In progress'
+            action_label = 'Resume run'
+            badge_class = 'badge-info'
+            description = f"Run #{r_dict['id']} is currently running · Started {time_str}"
+        else:
+            status_text = r_dict['status']
+            action_label = 'View results'
+            badge_class = 'badge-success' if r_dict['status'] == 'COMPLETED' else ('badge-danger' if r_dict['status'] == 'FAILED' else 'badge-warning')
+            count = r_dict['finding_count']
+            count_str = f"{count} findings" if count != 1 else "1 finding"
+            description = f"Run #{r_dict['id']} · {count_str} · {time_str}"
+            
+        recent_activity = {
+            'type': 'run',
+            'id': r_dict['id'],
+            'project_name': r_dict['project_name'],
+            'project_id': r_dict['project_id'],
+            'status': status_text,
+            'badge_class': badge_class,
+            'description': description,
+            'destination': f"/run/{r_dict['id']}",
+            'action_label': action_label
+        }
+    else:
+        # No runs exist. Check if a project exists.
+        c.execute('''
+            SELECT id, name, environment, created_at
+            FROM projects
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
+        ''')
+        latest_project = c.fetchone()
+        if latest_project:
+            p_dict = dict(latest_project)
+            time_str = format_local_time(p_dict['created_at'])
+            recent_activity = {
+                'type': 'project',
+                'id': p_dict['id'],
+                'project_name': p_dict['name'],
+                'project_id': p_dict['id'],
+                'status': 'Ready',
+                'badge_class': 'badge-neutral',
+                'description': f"Project created {time_str} · Environment: {p_dict['environment']}",
+                'destination': f"/project/{p_dict['id']}",
+                'action_label': 'Open project'
+            }
+            
+    c.execute("SELECT COUNT(*) FROM projects")
+    has_projects = (c.fetchone()[0] > 0)
+    
     conn.close()
-    return render_template('dashboard.html', 
-                          projects_count=projects_count,
-                          runs_count=runs_count,
-                          open_findings=open_findings,
-                          needs_review=needs_review,
-                          attention_items=attention_items,
-                          recent_activity=recent_activity,
-                          active_page='home')
+    return render_template('dashboard.html',
+                           recent_activity=recent_activity,
+                           has_projects=has_projects,
+                           active_page='home')
+
 
 @views_bp.route('/projects')
 def projects():
@@ -67,6 +92,7 @@ def projects():
     c = conn.cursor()
     c.execute('''
         SELECT p.*, 
+               (SELECT id FROM runs WHERE project_id=p.id AND status='COMPLETED' ORDER BY start_time DESC, id DESC LIMIT 1) as latest_completed_id,
                (SELECT MAX(start_time) FROM runs WHERE project_id = p.id) as last_run,
                (SELECT COUNT(*) FROM findings WHERE project_id = p.id AND status = 'OPEN') as open_findings
         FROM projects p 
@@ -101,9 +127,25 @@ def project(project_id):
     c.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
     project = c.fetchone()
     
-    c.execute("SELECT * FROM runs WHERE project_id = ? ORDER BY start_time DESC LIMIT 10", (project_id,))
+    c.execute("SELECT * FROM runs WHERE project_id = ? ORDER BY start_time DESC, id DESC", (project_id,))
     runs = c.fetchall()
+
+    from app.qa.scoped_mutation import ScopedMutationRegistry
+    pending_resources = ScopedMutationRegistry.get_pending_records_for_display(project_id=project_id)
+
+    c.execute("SELECT * FROM validation_contracts WHERE project_id = ? ORDER BY id DESC", (project_id,))
+    contracts_rows = c.fetchall()
+    from app.routes.api import inspect_stored_contract_row
+    contracts = []
+    for cr in contracts_rows:
+        item = dict(cr)
+        info = inspect_stored_contract_row(cr)
+        info.pop("vcontract", None)
+        item.update(info)
+        contracts.append(item)
     conn.close()
+    if project is None:
+        abort(404)
     
     from app.utils import format_local_time
     project_dict = dict(project)
@@ -115,7 +157,10 @@ def project(project_id):
         r_dict['start_time_local'] = format_local_time(r['start_time'])
         formatted_runs.append(r_dict)
     
-    return render_template('project.html', project=project_dict, runs=formatted_runs, active_page='projects')
+    latest_completed = next((r for r in formatted_runs if r['status'] == 'COMPLETED'), None)
+    return render_template('project.html', project=project_dict, runs=formatted_runs,
+                           latest_completed=latest_completed, pending_resources=pending_resources,
+                           contracts=contracts, active_page='projects')
 
 @views_bp.route('/project/<int:project_id>/dry-run')
 def dry_run(project_id):
@@ -124,47 +169,55 @@ def dry_run(project_id):
     c.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
     project = c.fetchone()
     conn.close()
+    if project is None:
+        abort(404)
     return render_template('dry_run.html', project=project, active_page='run-test')
 
 @views_bp.route('/run/<int:run_id>')
 def run_view(run_id):
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM runs WHERE id = ?", (run_id,))
-    run = dict(c.fetchone())
-    
-    c.execute("SELECT * FROM projects WHERE id = ?", (run['project_id'],))
-    project = c.fetchone()
-    
-    c.execute("SELECT status, count(*) as count FROM tests WHERE run_id = ? GROUP BY status", (run_id,))
-    stats = {row['status']: row['count'] for row in c.fetchall()}
-    
-    c.execute("SELECT * FROM tests WHERE run_id = ? ORDER BY timestamp DESC", (run_id,))
-    tests = c.fetchall()
-    
-    c.execute("SELECT * FROM findings WHERE run_id = ? ORDER BY timestamp DESC", (run_id,))
-    findings_rows = c.fetchall()
-    conn.close()
-    
+    from app.routes.exports import get_report
+    from app.qa.report_renderers import render_text, render_html
     from app.utils import format_local_time
-    run['start_time_local'] = format_local_time(run['start_time'])
-        
-    findings = []
-    for f in findings_rows:
-        fd = dict(f)
-        fd['time_str'] = format_local_time(fd['timestamp'], '%H:%M')
-        findings.append(fd)
-        
-    formatted_tests = []
-    for t in tests:
-        td = dict(t)
-        td['timestamp_local'] = format_local_time(td['timestamp'])
-        formatted_tests.append(td)
-        
+    report = get_report(run_id)
+    run = report['run']
+    tests = [dict(t, timestamp_local=format_local_time(t['timestamp'])) for t in report['tests']]
     if run['status'] == 'RUNNING':
-        return render_template('running.html', run=run, project=project, tests=formatted_tests, active_page='run-test')
-    else:
-        return render_template('results.html', run=run, project=project, stats=stats, tests=formatted_tests, findings=findings, active_page='run-test')
+        return render_template('running.html', run=run, project=report['project'], tests=tests, active_page='run-test')
+    run_tab = request.args.get('tab', 'summary')
+    if run_tab not in ('summary', 'findings', 'reports', 'technical'):
+        run_tab = 'summary'
+    # Presentation groups retain every original record and its order within a
+    # URL/viewport diagnostic group. Customer findings and counts are unchanged.
+    technical_groups = []
+    diagnostic_groups = {}
+    for test in tests:
+        if test['status'] == 'DIAGNOSTIC':
+            key = (test['url'], test['viewport'])
+            if key not in diagnostic_groups:
+                diagnostic_groups[key] = []
+                technical_groups.append(diagnostic_groups[key])
+            diagnostic_groups[key].append(test)
+        else:
+            technical_groups.append([test])
+    return render_template('results.html', run=run, project=report['project'], stats=report['stats'],
+                           tests=tests, findings=report['findings'], coverage=report['coverage'],
+                           triage=report['triage'], report=report,
+                           run_tab=run_tab,
+                           technical_groups=technical_groups,
+                           report_text=render_text(report), report_full_text=render_text(report, 'full'),
+                           report_html=render_html(report, document=False) if run_tab == 'reports' else '',
+                           report_full_html=render_html(report, 'full', document=False) if run_tab == 'reports' else '',
+                           active_page='run-test')
+
+@views_bp.route('/run/<int:run_id>/preview')
+def report_preview(run_id):
+    """Preview the canonical report without creating an export file."""
+    from app.routes.exports import get_report
+    from app.qa.report_renderers import render_html
+    mode = request.args.get('mode', 'standard')
+    if mode not in ('standard', 'full'):
+        abort(400)
+    return render_html(get_report(run_id), mode)
 
 @views_bp.route('/screenshots/<path:filename>')
 def serve_screenshot(filename):
@@ -176,51 +229,32 @@ def serve_screenshot(filename):
 
 @views_bp.route('/finding/<int:finding_id>')
 def finding_view(finding_id):
+    # The private editor is a separate read path; its dictionary is never
+    # passed to the reporting model, triage, renderers or clipboard blocks.
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute("SELECT * FROM findings WHERE id = ?", (finding_id,))
-    finding = dict(c.fetchone())
-    c.execute("SELECT * FROM projects WHERE id = ?", (finding['project_id'],))
-    project = c.fetchone()
-    
-    c.execute("SELECT * FROM tests WHERE run_id = ? AND stable_id = ?", (finding['run_id'], finding['stable_id']))
-    tests = c.fetchall()
-    
-    c.execute("SELECT * FROM runs WHERE id = ?", (finding['run_id'],))
-    run = dict(c.fetchone())
-    
-    c.execute("SELECT status, count(*) as count FROM tests WHERE run_id = ? GROUP BY status", (finding['run_id'],))
-    stats = {row['status']: row['count'] for row in c.fetchall()}
-    
-    c.execute("SELECT * FROM findings WHERE run_id = ? ORDER BY timestamp DESC", (finding['run_id'],))
-    all_findings_rows = c.fetchall()
-    
-    c.execute("SELECT * FROM tests WHERE run_id = ? ORDER BY timestamp DESC", (finding['run_id'],))
-    all_tests_rows = c.fetchall()
-    conn.close()
-    
+    try:
+        row = conn.execute('SELECT * FROM findings WHERE id=?', (finding_id,)).fetchone()
+    finally:
+        conn.close()
+    if row is None:
+        abort(404)
+    finding = dict(row)
+    from app.routes.exports import get_report
+    from app.qa.report_renderers import render_text, render_html
     from app.utils import format_local_time
+    report = get_report(finding['run_id'])
+    triage = next((item for item in report['triage'] if item['finding_id'] == finding_id), None)
     finding['timestamp_local'] = format_local_time(finding['timestamp'])
-    run['start_time_local'] = format_local_time(run['start_time'])
-    
-    all_findings = []
-    for f_row in all_findings_rows:
-        fd = dict(f_row)
-        fd['evidence'] = []
-        for t_row in all_tests_rows:
-            if t_row['stable_id'] == fd['stable_id']:
-                td = dict(t_row)
-                td['timestamp_local'] = format_local_time(td['timestamp'])
-                fd['evidence'].append(td)
-        all_findings.append(fd)
-        
-    formatted_tests = []
-    for t in tests:
-        td = dict(t)
-        td['timestamp_local'] = format_local_time(td['timestamp'])
-        formatted_tests.append(td)
-        
-    return render_template('finding.html', finding=finding, project=project, tests=formatted_tests, run=run, stats=stats, all_findings=all_findings, active_page='findings')
+    tests = [dict(t, timestamp_local=format_local_time(t['timestamp'])) for t in report['tests']
+             if t.get('stable_id') == finding['stable_id']]
+    return render_template('finding.html', finding=finding, project=report['project'], tests=tests,
+                           run=report['run'], stats=report['stats'], all_findings=report['findings'],
+                           coverage=report['coverage'], technical_tests=report['tests'],
+                           total_checks=report['total_checks'], triage=triage, report=report,
+                           report_text=render_text(report), report_html=render_html(report, document=False),
+                           report_full_text=render_text(report, 'full'),
+                           report_full_html=render_html(report, 'full', document=False), active_page='findings')
+
 
 def group_items_by_date(rows, date_field='timestamp'):
     grouped = {}
@@ -384,16 +418,24 @@ def reports():
                (SELECT COUNT(*) FROM findings WHERE run_id = r.id) as finding_count
         FROM runs r
         JOIN projects p ON r.project_id = p.id
-        ORDER BY r.start_time DESC
+        ORDER BY r.start_time DESC, r.id DESC
     ''')
     runs = [dict(row) for row in c.fetchall()]
     conn.close()
     
+    from app.utils import format_local_time
     for r in runs:
-        try:
-            dt_utc = datetime.strptime(r['start_time'], '%Y-%m-%d %H:%M:%S').replace(tzinfo=timezone.utc)
-            r['start_time_local'] = dt_utc.astimezone().strftime('%d %b %Y %H:%M')
-        except:
-            r['start_time_local'] = r['start_time']
+        r['start_time_local'] = format_local_time(r['start_time'])
             
     return render_template('reports.html', runs=runs, active_page='reports')
+
+
+@views_bp.route('/historical-resources')
+def historical_resources():
+    from app.qa.scoped_mutation import ScopedMutationRegistry
+    state = request.args.get('state', 'pending')
+    if state not in ('pending', 'all'):
+        state = 'pending'
+    records = ScopedMutationRegistry.get_historical_records(state=state)
+    return render_template('historical_resources.html', records=records, state=state, active_page='historical_resources')
+

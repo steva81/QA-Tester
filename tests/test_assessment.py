@@ -24,6 +24,25 @@ def test_assess_finding_fallback():
     assert res['confidence'] == 'Unreviewed'
     assert res['impact'] == '[Requires Human Review]'
 
+def test_assess_finding_missing_form_label():
+    res = assess_finding("Missing form label", "Missing form label for input", "Form Inspection", "Desktop 1366x768")
+    assert res['severity'] == 'Unreviewed'
+    assert res['risk'] == 'Unreviewed'
+    assert res['confidence'] == 'Unreviewed'
+    assert "screen readers" in res['impact']
+    assert "human inspection is needed" in res['impact']
+    assert "<label for=" in res['recommendation']
+
+def test_assess_finding_missing_document_title():
+    res = assess_finding("Missing document title", "Missing or empty document title", "DOM / Basic Quality", "Desktop 1366x768")
+    assert res['severity'] == 'Unreviewed'
+    assert res['risk'] == 'Unreviewed'
+    assert res['confidence'] == 'Unreviewed'
+    assert "<title>" in res['impact']
+    assert "Browser tabs" in res['impact']
+    assert "<title>" in res['recommendation']
+
+
 def test_safe_idempotent_migration(tmp_path):
     # Set up a fake database to test the migration
     db_path = tmp_path / "test_db.sqlite"

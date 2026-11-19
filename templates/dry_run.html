@@ -1,115 +1,170 @@
-{% extends "base.html" %}
-
-{% block page_title %}Run QA Test{% endblock %}
-
+{% extends 'base.html' %}
+{% block page_title %}New test · {{ project.name }}{% endblock %}
 {% block content %}
-<div class="workflow">
-    <div class="workflow-step completed">
-        <div class="workflow-step-icon">1</div>
-        <span>Select Project</span>
-    </div>
-    <div class="workflow-step active">
-        <div class="workflow-step-icon">2</div>
-        <span>Review Test Plan</span>
-    </div>
-    <div class="workflow-step">
-        <div class="workflow-step-icon">3</div>
-        <span>Run Test</span>
-    </div>
-    <div class="workflow-step">
-        <div class="workflow-step-icon">4</div>
-        <span>Results</span>
-    </div>
+<div class="breadcrumbs">
+<a href="/run-test">← Change project or website</a>
+<span>/</span>
+<a href="/project/{{ project.id }}">{{ project.name }}</a>
+<span>/</span>
+<span>New test setup</span>
 </div>
 
-<div class="card" style="max-width: 800px; margin: 0 auto; background: var(--surface);">
-    <h3 style="margin-top: 0; font-size: 1.5rem; margin-bottom: 16px;">Review Test Plan</h3>
-    <p class="text-muted" style="font-size: 1.05rem; margin-bottom: 24px; line-height: 1.6;">Please review the automated test plan before execution. The Smart Smoke QA will verify functionality across both Desktop and Mobile viewports without modifying backend data.</p>
-    
-    <div style="background: var(--gray-50); border: 1px solid var(--border); padding: 24px; border-radius: var(--radius); margin-bottom: 24px; color: var(--text-secondary);">
-        <h4 style="margin-top:0; color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 8px;">1. Target Configuration</h4>
-        <ul style="margin-bottom: 24px; line-height: 1.6;">
-            <li><strong>Project:</strong> {{ project.name }}</li>
-            <li><strong>Entry URL:</strong> <a href="{{ project.target_url }}" target="_blank" class="text-mono" style="color: var(--primary); text-decoration: none;">{{ project.target_url }}</a></li>
-            <li><strong>Environment:</strong> {{ project.environment }}</li>
-        </ul>
-
-        <h4 style="color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 8px;">2. Test Scope (Smart Smoke QA)</h4>
-        <ul style="margin-bottom: 24px; line-height: 1.6;">
-            <li>Load the entry URL.</li>
-            <li>Verify HTTP status (Must be 200/OK, no 404 or 500 errors).</li>
-            <li>Verify console for unhandled JavaScript errors.</li>
-            <li>Discover up to 10 internal links (same-origin only).</li>
-            <li>Follow links and verify they load successfully.</li>
-            <li>Capture screenshot evidence of any functional failures.</li>
-        </ul>
-
-        <h4 style="color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 8px;">3. Devices Simulated</h4>
-        <ul style="margin-bottom: 24px; line-height: 1.6;">
-            <li>Desktop: 1366x768 (Windows/Chrome)</li>
-            <li>Mobile: 390x844 (Chromium mobile equivalent)</li>
-        </ul>
-
-        <h4 style="color: var(--text-primary); font-size: 1.1rem; border-bottom: 1px solid var(--gray-200); padding-bottom: 8px;">4. Safety & Rules</h4>
-        <ul style="margin-bottom: 0; line-height: 1.6;">
-            <li>Crawling is strictly limited to <code style="background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 2px;">{{ project.target_url }}</code>. External domains are ignored.</li>
-            <li>No form submissions, POST requests, or destructive actions will be performed.</li>
-        </ul>
-    </div>
-    
-    <div style="padding: 20px; border: 1px solid #fde68a; background: var(--warning-light); border-radius: var(--radius-sm); margin-bottom: 24px;">
-        <label style="display: flex; align-items: center; cursor: pointer; font-weight: 500; color: var(--warning-dark); font-size: 1.05rem;">
-            <input type="checkbox" id="auth_confirm" style="margin-right: 12px; width: 20px; height: 20px;">
-            I confirm that I have authorization to perform automated QA testing against this environment.
-        </label>
-    </div>
-    
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-        <a href="/run-test" class="btn btn-secondary">← Back</a>
-        <button id="btnStart" class="btn btn-primary" onclick="startRun()" disabled style="padding: 0.6rem 1.5rem; font-size: 1.05rem;">Start QA Test</button>
-    </div>
-    
-    <div id="startError" class="error" style="display:none; margin-top:15px; text-align:right;"></div>
+<div class="workflow-steps-nav" style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+  <a href="/run-test" class="step-indicator" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;font-size:14px;text-decoration:none;">
+    <span>✓ 1</span>
+    <span>Website: {{ project.name }}</span>
+  </a>
+  <div class="step-indicator step-active" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#e1f1ee;color:#0b4a45;border-radius:6px;font-weight:700;font-size:14px;">
+    <span>2</span>
+    <span>Browser Session &amp; Scope</span>
+  </div>
+  <div class="step-indicator" style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border:1px solid var(--border);color:var(--text-muted);border-radius:6px;font-size:14px;">
+    <span>3</span>
+    <span>Review &amp; Start</span>
+  </div>
 </div>
 
+<div class="workspace-meta">
+<span class="badge badge-info">{{ project.environment }}</span>
+<span>{{ project.target_url }}</span>
+<span>Tester: {{ project.tester_name }}</span>
+</div>
+<nav class="workspace-nav" aria-label="Project workspace">
+<a href="/project/{{ project.id }}">Overview &amp; runs</a>
+<a href="/project/{{ project.id }}/dry-run" aria-current="page">New test setup</a>
+</nav>
+<section class="panel setup-card setup-card-browser" id="step-open-browser" style="border: 1px solid #c2e2dd; border-left: 5px solid #005f56; background: #ffffff; border-radius: 8px; padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+  <h2 style="margin: 0; color: #005f56; font-size: 18px; font-weight: 700;">1. Browser Preparation &amp; Session</h2>
+  <span class="badge" id="session-status" role="status" style="font-size: 13px; padding: 4px 10px;">Checking session…</span>
+</div>
+<p id="browser-step-desc" class="text-muted" style="margin-bottom: 14px;">Log in or prepare your authenticated session in the QA Browser to reuse credentials for Full Site QA, the current page, or collected pages.</p>
+<div class="actions" style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap;">
+<button id="btnToggleInteractive" class="btn btn-secondary" onclick="toggleInteractive()">Open QA Browser</button>
+<span class="text-muted preserve-lines" id="current-url" style="font-size: 13px;"></span>
+</div>
+<p class="text-muted" id="browser-requirement-note" style="font-size: 12px; margin-bottom: 0;">Opening the browser does not start a QA test.</p>
+</section>
+
+<section class="panel setup-card setup-card-scope" id="step-choose-scope" style="border: 1px solid #d0e1f9; border-left: 5px solid #2563eb; background: #ffffff; border-radius: 8px; padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+<h2 style="margin-top: 0; margin-bottom: 8px; color: #1e40af; font-size: 18px; font-weight: 700;">2. Choose Scope &amp; Test Mode</h2>
+<p class="text-muted" style="margin-bottom: 14px;">Select the evaluation depth and optional interactive features for this run.</p>
+<div class="form-group" style="margin-bottom: 14px;">
+<label for="test-mode" style="font-weight: 600; margin-bottom: 6px; display: block;">QA mode</label>
+<select class="form-control" id="test-mode" style="max-width: 500px;">
+<option value="crawl">Smart Site Crawl · up to 25 pages</option>
+<option value="full">Full Site QA · authenticated discovery</option>
+<option value="current">Current page · QA Browser</option>
+<option value="collected">Collected pages · QA Browser queue</option>
+</select>
+</div>
+<p class="notice" id="scopeModeDetails" style="margin-bottom: 14px; background: #f0f7ff; border-left: 4px solid #3b82f6;"></p>
+<div class="form-group" id="page-limit-field" style="margin-bottom: 14px;" hidden>
+<label for="fullPageLimit" style="font-weight: 600; margin-bottom: 4px; display: block;">Full Site QA page limit</label>
+<input id="fullPageLimit" type="number" min="1" max="1000" value="250" style="width: 120px;">
+<p class="text-muted" style="font-size: 12px; margin-top: 4px;">Limits bound safe discovery; reaching a limit can leave coverage incomplete.</p>
+</div>
+<div class="form-group" id="disclosure-field" style="margin-bottom: 14px;" hidden>
+<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 14px;">
+<label class="notice" for="enableInteractiveDisclosure" style="font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; background: transparent; padding: 0; border: none;">
+<input type="checkbox" id="enableInteractiveDisclosure" autocomplete="off" style="width: 18px; height: 18px;"> Test expandable content and tabs</label>
+<p class="text-muted" style="font-size: 13px; margin-bottom: 10px;">Automatically discover and test safe expandable sections, tabs, and nested disclosures in disposable views without mutating your session. Unsupported and mutating controls are recorded as limited coverage.</p>
+<div id="interactive-options-panel" style="margin-top: 10px; padding: 10px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px;" hidden>
+<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+<div style="flex:1;min-width:200px;">
+<label for="interactiveEvaluationsLimit" style="font-weight:600;font-size:13px;display:block;margin-bottom:4px;">Interactive checks per page limit</label>
+<input id="interactiveEvaluationsLimit" type="number" min="1" max="30" value="20" style="width:100px;">
+<span class="text-muted" style="font-size:12px;display:block;margin-top:2px;">Maximum reachable controls evaluated per page (1–30, default: 20).</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="form-group" id="mutation-field" style="margin-bottom: 14px;" hidden>
+<div style="background: #fefce8; border: 1px solid #fde047; border-radius: 6px; padding: 14px;">
+<label class="notice" for="enableAuthorizedMutations" style="font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; background: transparent; padding: 0; border: none; color: #854d0e;">
+<input type="checkbox" id="enableAuthorizedMutations" autocomplete="off" style="width: 18px; height: 18px;"> Enable authorized profile workflows (create, edit, upload, delete)</label>
+<p class="text-muted" style="font-size: 13px; margin-bottom: 0;">Autonomous state-changing workflows with strict ownership isolation. Creates tagged test material, verifies validation rejection, modifies items, uploads harmless files, and deletes run-owned items with verified cleanup sweep. Pre-existing records, account deletion, and security settings remain strictly prohibited.</p>
+</div>
+</div>
+<div id="queue-panel" class="notice" hidden>
+<h3>Collected pages <span class="badge" id="collectedCount">0</span></h3>
+<p class="text-muted">Navigate in the test browser above and add each page you want to evaluate to this queue.</p>
+<div class="actions">
+<button class="btn btn-secondary" onclick="sessionAction('collect')">Add current page</button>
+<button class="btn btn-secondary" onclick="sessionAction('clear')">Clear queue</button>
+</div>
+<ul id="collectedPagesList" class="preserve-lines" style="margin-top:8px;"></ul>
+</div>
+</section>
+
+<section class="panel setup-card setup-card-review" id="step-review-start" style="border: 1px solid #d1fae5; border-left: 5px solid #059669; background: #ffffff; border-radius: 8px; padding: 22px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+<h2 style="margin-top: 0; margin-bottom: 8px; color: #065f46; font-size: 18px; font-weight: 700;">3. Review &amp; Start QA Test</h2>
+<p class="text-muted" style="margin-bottom: 14px;">Evaluates responsive layouts across Desktop (1366×768) and Mobile (390×844) with same-origin safety boundaries.</p>
+<div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 14px; margin-bottom: 16px;">
+<label for="auth_confirm" style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; font-weight: 600; color: #166534; font-size: 14px;">
+<input type="checkbox" id="auth_confirm" style="margin-top: 2px; width: 18px; height: 18px;">
+<span>I confirm that I have authorization to perform automated QA testing against this environment.</span>
+</label>
+</div>
+<div class="actions" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+<button id="btnStart" class="btn btn-primary" onclick="startRun()" disabled style="padding: 10px 22px; font-size: 15px; font-weight: 600;">Start QA Test</button>
+<span id="startHelp" class="text-muted" style="font-size: 13px;">Open the test browser above to continue.</span>
+<a href="/project/{{ project.id }}" class="btn btn-secondary">Return to existing runs</a>
+</div>
+<p id="startError" class="error" role="alert" style="margin-top:10px;"></p>
+</section>
 <script>
-    const cb = document.getElementById('auth_confirm');
-    const btn = document.getElementById('btnStart');
-    
-    cb.addEventListener('change', function() {
-        btn.disabled = !this.checked;
-    });
-
-    async function startRun() {
-        const errDiv = document.getElementById('startError');
-        btn.disabled = true;
-        cb.disabled = true;
-        btn.textContent = "Starting QA test...";
-        errDiv.style.display = 'none';
-        
-        try {
-            const res = await fetch('/api/runs', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ project_id: {{ project.id }} })
-            });
-            const data = await res.json();
-            if(data.status === 'success' || data.status === 'started') {
-                window.location.href = '/run/' + data.run_id;
-            } else {
-                btn.disabled = false;
-                cb.disabled = false;
-                btn.textContent = "Start QA Test";
-                errDiv.textContent = data.message || "Failed to start QA test.";
-                errDiv.style.display = 'block';
-            }
-        } catch(e) {
-            btn.disabled = false;
-            cb.disabled = false;
-            btn.textContent = "Start QA Test";
-            errDiv.textContent = "Network error. Could not reach server.";
-            errDiv.style.display = 'block';
+const modeSelect=document.getElementById('test-mode'),cb=document.getElementById('auth_confirm'),btn=document.getElementById('btnStart');let session={active:false},starting=false;const requestedMode=new URLSearchParams(location.search).get('mode');if(['crawl','full','current','collected'].includes(requestedMode))modeSelect.value=requestedMode;
+function updateScope(){
+    const m=modeSelect.value;
+    document.getElementById('page-limit-field').hidden=(m!=='full');
+    const df=document.getElementById('disclosure-field');
+    const dcb=document.getElementById('enableInteractiveDisclosure');
+    const iop=document.getElementById('interactive-options-panel');
+    if(df){df.hidden=(m!=='full');if(m!=='full'&&dcb)dcb.checked=false;}
+    if(iop){iop.hidden=(m!=='full'||!dcb||!dcb.checked);}
+    const mf=document.getElementById('mutation-field');
+    const mcb=document.getElementById('enableAuthorizedMutations');
+    if(mf){mf.hidden=(m!=='full'&&m!=='current');if(m!=='full'&&m!=='current'&&mcb)mcb.checked=false;}
+    document.getElementById('queue-panel').hidden=(m!=='collected');
+    document.getElementById('scopeModeDetails').textContent={
+        crawl:'Discover up to 25 unique internal pages. An active QA Browser session is reused when available.',
+        full:'Discover and evaluate safely reachable internal pages in your authenticated QA Browser. A READY session is required.',
+        current:'Evaluate the current QA Browser page only, in both viewports.',
+        collected:'Evaluate the collected same-origin pages only, in both viewports.'
+    }[m];
+    const browserNote=document.getElementById('browser-requirement-note');
+    if(browserNote){
+        if(m==='crawl'){
+            browserNote.textContent='Optional for Smart Site Crawl · Crawl can discover internal pages without an open browser session.';
+        }else{
+            browserNote.textContent='A browser session is required for '+(m==='full'?'Full Site QA':m==='current'?'Current page':'Collected pages')+'. Opening the browser does not start a QA test.';
         }
     }
-</script>
-{% endblock %}
+    let disabled=false,helpMsg='';
+    if(starting){
+        disabled=true;helpMsg='Starting QA test…';
+    }else if(m!=='crawl'&&!session.active){
+        disabled=true;helpMsg='Open the test browser above to continue.';
+    }else if(m==='full'&&session.state!=='READY'){
+        disabled=true;helpMsg='Waiting for test browser to be ready…';
+    }else if(m==='collected'&&!(session.collected_urls||[]).length){
+        disabled=true;helpMsg='Add at least one page to the collection above to continue.';
+    }else if(!cb.checked){
+        disabled=true;helpMsg='Confirm authorization below to start the test.';
+    }
+    btn.disabled=disabled;
+    const startHelp=document.getElementById('startHelp');
+    if(startHelp)startHelp.textContent=helpMsg;
+}
+modeSelect.addEventListener('change',updateScope);cb.addEventListener('change',updateScope);
+const dcbEl=document.getElementById('enableInteractiveDisclosure');if(dcbEl)dcbEl.addEventListener('change',updateScope);
+const mcbEl=document.getElementById('enableAuthorizedMutations');if(mcbEl)mcbEl.addEventListener('change',updateScope);updateScope();
+window.addEventListener('pageshow',function(){const dcb=document.getElementById('enableInteractiveDisclosure');if(dcb)dcb.checked=false;const mcb=document.getElementById('enableAuthorizedMutations');if(mcb)mcb.checked=false;starting=false;cb.disabled=false;btn.textContent='Start QA Test';updateScope();});
+async function loadState(){try{const r=await fetch('/api/projects/{{ project.id }}/interactive/state');if(!r.ok)throw Error();session=await r.json();document.getElementById('session-status').textContent=session.active?'Session '+(session.state||'active'):'Browser closed';document.getElementById('btnToggleInteractive').textContent=session.active?'End browser session':'Open QA Browser';document.getElementById('current-url').textContent=session.current_url||'';const urls=session.collected_urls||[];document.getElementById('collectedCount').textContent=urls.length;const ul=document.getElementById('collectedPagesList');ul.replaceChildren();urls.forEach(url=>{const li=document.createElement('li');li.textContent=url;ul.append(li)});updateScope()}catch(e){session={active:false};document.getElementById('session-status').textContent='Session unavailable · retrying';updateScope()}}
+async function sessionAction(action){try{const r=await fetch('/api/projects/{{ project.id }}/interactive/'+action,{method:'POST'}),data=await r.json();if(!r.ok||data.status==='error')throw Error(data.error||data.message||'Browser action failed');await loadState()}catch(e){showToast(e.message)}}
+async function toggleInteractive(){const button=document.getElementById('btnToggleInteractive');button.disabled=true;await sessionAction(session.active?'stop':'start');button.disabled=false;}
+async function startRun(){if(btn.disabled)return;starting=true;updateScope();cb.disabled=true;btn.textContent='Starting QA test…';try{const payload={project_id:{{ project.id }},mode:modeSelect.value,collected_urls:session.collected_urls||[]};const mcb=document.getElementById('enableAuthorizedMutations');payload.enable_authorized_mutations=Boolean(mcb&&mcb.checked);if(payload.mode==='full'){const limit=Number(document.getElementById('fullPageLimit').value);if(!Number.isInteger(limit)||limit<1||limit>1000)throw Error('Page limit must be a whole number between 1 and 1000.');payload.page_limit=limit;const dcb=document.getElementById('enableInteractiveDisclosure');const dEnabled=Boolean(dcb&&dcb.checked);payload.enable_interactive_disclosure=dEnabled;if(dEnabled){const evalInput=document.getElementById('interactiveEvaluationsLimit');const evalLimit=evalInput?Number(evalInput.value):20;if(!Number.isInteger(evalLimit)||evalLimit<1||evalLimit>30)throw Error('Interactive checks per page limit must be a whole number between 1 and 30.');payload.interactive_options={max_evaluations_per_page:evalLimit,max_evaluations_per_run:Math.min(100,Math.max(10,evalLimit*3)),action_timeout:1.0,reconstruction_timeout:5.0};}}const r=await fetch('/api/runs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),data=await r.json();if(!r.ok||!data.run_id)throw Error(data.error||data.message||'Could not start QA test');const dcb=document.getElementById('enableInteractiveDisclosure');if(dcb)dcb.checked=false;const mcbPost=document.getElementById('enableAuthorizedMutations');if(mcbPost)mcbPost.checked=false;location.href='/run/'+data.run_id;}catch(e){document.getElementById('startError').textContent=e.message;starting=false;cb.disabled=false;btn.textContent='Start QA Test';updateScope()}}
+loadState();setInterval(loadState,2000);
+</script>{% endblock %}

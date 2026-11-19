@@ -1,136 +1,153 @@
-{% extends "base.html" %}
-
-{% block page_title %}QA Test Results{% endblock %}
-
-{% block topbar_actions %}
-<a href="/project/{{ project.id }}" class="btn btn-secondary">Project Details</a>
-<a href="/reports" class="btn btn-primary">Open Reports</a>
-{% endblock %}
-
+{% extends 'base.html' %}{% from 'finding_list.html' import finding_list %}
+{% block page_title %}{{ 'QA Test Results' if run_tab == 'summary' else run_tab|title }} · Run #{{ run.id }}{% endblock %}
 {% block content %}
-{% if request.path.startswith('/run-test') or 'run-test' in request.headers.get('Referer', '') or 'dry-run' in request.headers.get('Referer', '') %}
-<div class="workflow">
-    <div class="workflow-step completed">
-        <div class="workflow-step-icon">1</div>
-        <span>Select Project</span>
-    </div>
-    <div class="workflow-step completed">
-        <div class="workflow-step-icon">2</div>
-        <span>Review Test Plan</span>
-    </div>
-    <div class="workflow-step completed">
-        <div class="workflow-step-icon">3</div>
-        <span>Run Test</span>
-    </div>
-    <div class="workflow-step active">
-        <div class="workflow-step-icon">4</div>
-        <span>Results</span>
-    </div>
+<div id="run-report-text" style="display:none">{{ report_text }}</div>
+<div id="run-report-full-text" style="display:none">{{ report_full_text }}</div>
+{% if run_tab == 'summary' %}
+<section class="panel outcome {{ 'failed' if report.outcome == 'FAILED' else 'limited' if report.outcome in ['LIMITED COVERAGE','INTERRUPTED'] else '' }}" id="executive-summary">
+<div class="eyebrow">Run outcome</div>
+<h2>{{ report.outcome }}</h2>
+<p>{{ report.summary }}</p>
+{% if report.limitation_reasons %}
+<div id="limitation-reasons-notice" style="margin: 10px 0; padding: 10px 14px; background: #fffbeb; border: 1px solid #fde047; border-left: 4px solid #d97706; border-radius: 6px; color: #78350f; font-size: 13px;">
+<strong style="display:block; margin-bottom:4px; color:#92400e;">Coverage limitations &amp; verification notes:</strong>
+<ul style="margin:0; padding-left:18px;">
+{% for reason in report.limitation_reasons %}
+<li>{{ reason }}</li>
+{% endfor %}
+</ul>
 </div>
 {% endif %}
-
-<div class="card">
-    <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">{{ project.name }} - Run #{{ run.id }}</h3>
-    <div class="grid-2">
-        <div style="font-size: 0.95rem;">
-            <p style="margin: 6px 0;"><strong>Started:</strong> <span class="text-muted">{{ run.start_time_local }}</span></p>
-            <p style="margin: 6px 0;"><strong>Target:</strong> <a href="{{ project.target_url }}" target="_blank" style="color: var(--primary); text-decoration: none;" class="text-mono">{{ project.target_url }}</a></p>
-            <p style="margin: 6px 0;"><strong>Environment:</strong> {{ project.environment }}</p>
-            <p style="margin: 6px 0;"><strong>Tester:</strong> {{ project.tester_name }}</p>
-        </div>
-        <div>
-            <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 0.95rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--gray-200);">
-                    <span style="font-weight: 600;">Total Checks:</span>
-                    <span style="font-weight: 600;">{{ tests|length }}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
-                    <span class="badge badge-success" style="width: 90px; justify-content: center;">PASS</span>
-                    <span style="font-weight: 500;">{{ stats.get('PASS', 0) }}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
-                    <span class="badge badge-danger" style="width: 90px; justify-content: center;">FAIL</span>
-                    <span style="font-weight: 500;">{{ stats.get('FAIL', 0) }}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="badge badge-warning" style="width: 90px; justify-content: center;">OBSERVATION</span>
-                    <span style="font-weight: 500;">{{ stats.get('OBSERVATION', 0) }}</span>
-                </div>
-            </div>
-        </div>
-    </div>
+<p>
+<strong>Next action:</strong> {{ report.next_action }}</p>
+</section>
+<div class="metrics">
+<div class="metric metric-findings">
+<span>Customer findings</span>
+<strong>{{ report.customer_finding_count }}</strong>
 </div>
-
-<h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 1.25rem;">Findings Detected ({{ findings|length }})</h3>
-
-{% if findings %}
-<div class="grid-3">
-    {% for f in findings %}
-    <div class="card" style="margin-bottom: 0; display: flex; flex-direction: column;">
-        <h4 style="margin-top: 0; margin-bottom: 8px; font-size: 1.1rem;"><a href="/finding/{{ f.id }}" style="text-decoration: none; color: var(--primary);">{{ f.stable_id }}</a></h4>
-        <p style="margin: 0 0 16px 0; font-weight: 600; font-size: 0.95rem; color: var(--text-primary); flex-grow: 1;">{{ f.title }}</p>
-        
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
-            <span class="badge {{ 'badge-danger' if f.status == 'OPEN' else 'badge-neutral' }}">{{ f.status }}</span>
-            <span class="badge {{ 'badge-danger' if f.severity == 'High' else 'badge-warning' if f.severity == 'Medium' else 'badge-neutral' }}" title="Severity">S: {{ display_severity_risk(f.severity) }}</span>
-            
-            {% if display_review_status(f.review_status) == 'Pending review' %}
-            <span class="badge badge-warning">Pending review</span>
-            {% else %}
-            <span class="badge {{ 'badge-success' if f.review_status == 'APPROVED' else 'badge-danger' }}">{{ f.review_status }}</span>
-            {% endif %}
-        </div>
-        
-        <div style="margin-top: auto;">
-            <a href="/finding/{{ f.id }}" class="btn btn-outline" style="width: 100%;">Review Finding</a>
-        </div>
-    </div>
+<div class="metric metric-review">
+<span>Human review / retest</span>
+<strong>{{ report.review_queue|length }}</strong>
+</div>
+<div class="metric metric-priority">
+<span>High priority</span>
+<strong>{{ report.priorities.High }}</strong>
+</div>
+<div class="metric metric-checks">
+<span>Total Checks</span> <strong>{{ report.total_checks }}</strong>
+</div>
+</div>
+{% if report.pending_resources %}
+<section class="panel panel-warning" id="pending-resources-panel" style="border: 1px solid #fde047; border-left: 5px solid #d97706; background: #fffbeb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+    <h2 style="margin: 0; color: #92400e; font-size: 18px; font-weight: 700;">Test Material Pending Cleanup ({{ report.pending_resources|length }})</h2>
+    <span class="badge" style="background: #fef08a; color: #854d0e; font-weight: 600;">PENDING IN ENVIRONMENT</span>
+  </div>
+  <p class="text-muted" style="margin-bottom: 14px; color: #78350f;">The following test records were created during this run and could not be verified deleted (due to safety limits, network error, or uncertain readback). They are recorded in the ownership journal and have not been deleted automatically.</p>
+  <ul class="row-list" style="border: 1px solid #fef08a; border-radius: 6px; background: #ffffff; padding: 0 12px; margin-bottom: 14px;">
+    {% for res in report.pending_resources %}
+    <li style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #fef9c3;">
+      <div style="min-width: 0; padding-right: 12px;">
+        <strong style="display: block; font-size: 14px; color: #1e293b;">{{ res.entity_name }}</strong>
+        <span class="text-muted" style="font-size: 12px;">Type: {{ res.entity_type }} · Status: {{ res.status }} · Remote ID: {{ res.remote_entity_id or 'Unconfirmed' }}</span>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="resolveResource({{ res.id }})" style="font-size: 12px; padding: 4px 10px; min-height: 30px;">Acknowledge manually</button>
+    </li>
     {% endfor %}
-</div>
-{% else %}
-<div class="card" style="text-align: center; padding: 60px 40px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--gray-400); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: 16px;">
-    <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--success);"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-    <div>
-        <h3 style="margin: 0 0 8px 0; color: var(--success); font-size: 1.5rem;">No issues found!</h3>
-        <p style="margin: 0;">All automated checks passed successfully.</p>
-    </div>
-</div>
+  </ul>
+  <p style="font-size: 12px; color: #a16207; margin: 0;">Once verified or cleaned in your test environment, mark each resource above to record manual resolution.</p>
+</section>
+<script>
+async function resolveResource(id) {
+    const note = prompt('Manual acknowledgement does not confirm server deletion. Add your verification note:', '');
+    if (note === null) return;
+    if (!note.trim()) {
+        showToast('A verification note is required.');
+        return;
+    }
+    try {
+        const r = await fetch('/api/projects/{{ project.id }}/pending-resources/' + id + '/resolve', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({note: note.trim()})
+        });
+        if (!r.ok) throw Error('Could not mark resource as resolved');
+        showToast('Resource marked as manually resolved.');
+        setTimeout(() => location.reload(), 600);
+    } catch(e) {
+        showToast(e.message);
+    }
+}
+</script>
 {% endif %}
-
-<h3 style="margin-top: 32px; margin-bottom: 16px; font-size: 1.25rem;">All Checks Performed</h3>
-<div class="card" style="padding: 0; overflow-x: auto; width: 100%;">
-    <table class="table" style="margin: 0; font-size: 0.9rem; min-width: 800px;">
-        <thead>
-            <tr>
-                <th style="width: 10%;">Time</th>
-                <th style="width: 30%;">URL</th>
-                <th style="width: 15%;">Viewport</th>
-                <th style="width: 10%;">Status</th>
-                <th style="width: 35%;">Expected vs Actual</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for t in tests %}
-            <tr>
-                <td style="white-space: nowrap; font-variant-numeric: tabular-nums;" class="text-muted">{{ t.timestamp_local.split(' ')[-1] if t.timestamp_local else '' }}</td>
-                <td style="overflow-wrap: anywhere; word-break: normal;"><a href="{{ t.url }}" target="_blank" class="text-mono" style="color: var(--primary); text-decoration: none;">{{ t.url }}</a></td>
-                <td>{{ t.viewport }}</td>
-                <td>
-                    <span class="badge {{ 'badge-success' if t.status == 'PASS' else 'badge-danger' if t.status == 'FAIL' else 'badge-warning' }}">{{ t.status }}</span>
-                </td>
-                <td>
-                    <div style="margin-bottom: 6px;"><strong style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Exp:</strong> <span style="color: var(--text-primary);">{{ t.expected_result }}</span></div>
-                    <div><strong style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">Act:</strong> <span style="color: var(--text-primary);">{{ t.actual_result }}</span></div>
-                    
-                    {% if t.actual_result and "net::ERR_CONNECTION_REFUSED" in t.actual_result %}
-                    <div style="margin-top: 12px; padding: 10px; background: var(--warning-light); border: 1px solid #fde68a; border-left: 4px solid var(--warning); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--warning-dark);">
-                        <strong>Note:</strong> QA Tester could not reach the website. Before reporting this as a bug, confirm that the local server is actually running at <code style="background: rgba(0,0,0,0.05); padding: 2px 4px; border-radius: 2px;">{{ t.url }}</code>.
-                    </div>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+{% include 'crawl_coverage.html' %}
+<section class="panel" id="summary-findings"><div class="panel-heading"><h2>Needs review / Priority findings</h2><a class="btn btn-secondary" href="/run/{{ run.id }}?tab=findings">All {{ findings|length }} findings →</a></div>
+<p class="text-muted">{{ report.review_queue|length }} require review or retest · {{ report.priorities.High }} high priority. Highest-priority findings shown first.</p>
+{{ finding_list(findings[:3], compact=true) }}
+{% if findings and not report.review_queue %}<p class="completion-note">All findings are reviewed with no retest currently required. Review the recorded outcome and coverage before closing this run.</p>{% endif %}</section>
+{% if not coverage %}<p class="scope-note">Ordinary QA scope · {{ report.total_checks }} recorded checks. <a href="/run/{{ run.id }}?tab=technical">Inspect recorded scope and technical evidence →</a></p>{% endif %}
+{% if report.related_groups %}<section class="panel"><h2>Related themes</h2>
+<p class="text-muted">Matching technical evidence connects these findings. Each retains its original evidence and review status.</p>{% for group in report.related_groups %}<p>{% for id in group.finding_ids %}<a href="/finding/{{ id }}">{{ group.bug_ids[loop.index0] }}</a>{% if not loop.last %} · {% endif %}{% endfor %} — {{ group.evidence_count }} records across {{ group.page_count }} pages</p>{% endfor %}</section>{% else %}<p class="scope-note">No related themes supported by matching evidence. Review any findings individually.</p>{% endif %}
+{% elif run_tab == 'findings' %}
+<section class="panel">
+<div class="panel-heading">
+<h2>Findings &amp; advisory triage</h2>
+<span class="badge">{{ findings|length }} customer findings</span>
 </div>
-{% endblock %}
+<p class="text-muted">Ordered by deterministic review priority. Manual severity, risk and confidence remain authoritative. Review each finding for suggestions, rationale and evidence.</p><p class="queue-summary" id="report-review-queue"><strong>{{ report.review_queue|length }} findings require review or retest</strong>{% if not report.review_queue %} · No pending review; check the outcome and coverage before closing the run.{% endif %}</p>{{ finding_list(findings) }}</section>
+{% elif run_tab == 'reports' %}
+<div id="run-report-html" hidden>{{ report_html|safe }}</div>
+<div id="run-report-full-html" hidden>{{ report_full_html|safe }}</div>
+<section class="panel" data-report-run="{{ run.id }}">
+<div class="panel-heading">
+<h2>Report for Run #{{ run.id }}</h2>
+<span class="badge">{{ report.outcome }}</span>
+</div>
+<div class="report-controls">
+<fieldset class="report-mode-control"><legend>Report mode</legend><div class="segmented-control"> <label><input type="radio" name="report-mode" value="standard" checked><span>Standard</span></label><label><input type="radio" name="report-mode" value="full"><span>Full Technical</span></label></div></fieldset>
+<div class="actions">
+<button class="btn btn-primary" data-preview>Preview report</button>
+<button class="btn btn-accent" data-copy>Copy report</button>
+</div>
+</div>
+<p class="notice" data-mode-description>Standard explains the outcome, findings, review needs and coverage.</p>
+<div class="actions">
+<span class="text-muted">Export selected mode</span>
+<button class="btn btn-export export-word" data-export="docx">Word</button>
+<button class="btn btn-export export-txt" data-export="txt">TXT</button>
+<button class="btn btn-export export-markdown" data-export="markdown">Markdown</button>
+<a class="btn btn-export export-html" data-report-link="/export/{{ run.id }}/html" href="/export/{{ run.id }}/html?mode=standard" target="_blank" rel="noopener">HTML</a>
+</div>
+<p class="text-muted" style="margin-top:16px">Both modes use the same recorded counts and findings. Private My Learning Notes are excluded from every report.</p>
+<div class="notice" data-export-result hidden>
+<span class="preserve-lines">
+</span>
+<button class="btn btn-link">Open exported file</button>
+</div>
+<section class="preview-shell" data-preview-shell hidden><div class="preview-heading"><strong>Report preview</strong><span class="badge badge-info" data-preview-mode>Standard</span></div><iframe title="Selected report preview" class="report-preview" hidden></iframe></section>
+<hr style="border:0;border-top:1px solid var(--border);margin:22px 0">
+<button class="btn btn-link" data-folder>Open existing exports folder</button>
+<span class="text-muted">Browse files already created; this does not generate a report.</span>
+</section>
+{% elif run_tab == 'technical' %}
+<section class="panel">
+<div class="panel-heading">
+<h2>Technical records</h2>
+<span class="badge">{{ report.total_checks }} recorded checks</span>
+</div>
+<p class="text-muted">Safety actions, limited coverage and diagnostics are evidence about test execution; they are not customer defects.</p>
+<label for="technical-filter">Filter recorded status</label>
+<select id="technical-filter">
+<option value="all">All records</option>{% for status,count in stats.items() %}<option value="{{ status }}">{{ status }} ({{ count }})</option>{% endfor %}</select>
+<p id="technical-count" class="text-muted" role="status">Showing {{ report.total_checks }} records</p>
+{% from 'technical_record.html' import record %}
+{% for group in technical_groups %}{% set t=group[0] %}
+{% if t.status == 'DIAGNOSTIC' %}<details class="diagnostic-group" data-status="DIAGNOSTIC" data-record-count="{{ group|length }}"><summary><span class="badge badge-info">DIAGNOSTIC · {{ group|length }} records</span><span>{{ t.viewport }}</span><span class="record-url">{{ t.url }}</span><span class="text-muted">Expand individual records</span></summary><div class="diagnostic-records">{% for item in group %}{{ record(item) }}{% endfor %}</div></details>
+{% else %}<div data-status="{{ t.status }}" data-record-count="1">{{ record(t) }}</div>{% endif %}
+{% else %}<p class="empty-inline">No technical records were recorded. Review the run outcome before starting another test.</p>{% endfor %}
+{% if not stats.get('DIAGNOSTIC',0) %}<p class="completion-note">No diagnostic records. Other recorded statuses remain available above.</p>{% endif %}
+<p id="technical-empty" class="empty-inline" hidden>No records match this status. Choose All records to inspect the remaining evidence.</p>
+</section>{% include 'crawl_coverage.html' %}
+<script>document.getElementById('technical-filter').addEventListener('change',function(){let count=0;document.querySelectorAll('[data-record-count]').forEach(el=>{el.hidden=this.value!=='all'&&el.dataset.status!==this.value;if(!el.hidden)count+=Number(el.dataset.recordCount)});document.getElementById('technical-count').textContent='Showing '+count+' records';document.getElementById('technical-empty').hidden=count!==0;});</script>
+{% endif %}{% endblock %}

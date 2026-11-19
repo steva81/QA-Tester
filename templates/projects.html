@@ -1,115 +1,51 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% block page_title %}Projects{% endblock %}
-
-{% block topbar_actions %}
-<button class="btn btn-primary" onclick="document.getElementById('createProjectModal').style.display='flex'">Create QA Project</button>
-{% endblock %}
-
-{% block content %}
-<div class="grid-3">
-    {% for p in projects %}
-    <div class="card" style="display: flex; flex-direction: column;">
-        <h3 style="margin-top: 0; margin-bottom: 8px; font-size: 1.25rem;">{{ p.name }}</h3>
-        <p class="text-muted" style="margin: 0 0 20px 0; font-size: 0.9rem; flex-grow: 1;">
-            <a href="{{ p.target_url }}" target="_blank" style="color: var(--primary); text-decoration: none;" class="text-mono">{{ p.target_url }}</a><br>
-            <span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg> {{ p.environment }}</span>
-        </p>
-        <div style="font-size: 0.9rem; margin-bottom: 20px; padding: 12px; background: var(--gray-50); border-radius: var(--radius-sm);">
-            <div style="margin-bottom: 6px;">
-                <strong style="color: var(--text-primary);">Last Run:</strong> 
-                <span class="text-muted">{{ p.last_run_local }}</span>
-            </div>
-            <div>
-                <strong style="color: var(--text-primary);">Open Findings:</strong> 
-                <span style="{% if p.open_findings > 0 %}color: var(--danger-dark); font-weight: 600;{% else %}color: var(--text-muted);{% endif %}">{{ p.open_findings }}</span>
-            </div>
-        </div>
-        <div style="display: flex; gap: 12px; margin-top: auto;">
-            <a href="/project/{{ p.id }}" class="btn btn-secondary" style="flex: 1;">Open</a>
-            <a href="/project/{{ p.id }}/dry-run" class="btn btn-primary" style="flex: 1;"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="margin-right: 4px;"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><circle cx="12" cy="12" r="10" stroke-linecap="round" stroke-linejoin="round"></circle></svg> Run Test</a>
-        </div>
-    </div>
-    {% else %}
-    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 40px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--gray-400); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; gap: 16px;">
-        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: var(--gray-400);"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
-        <div>
-            <h3 style="margin: 0 0 8px 0; font-size: 1.25rem; color: var(--text-primary);">No QA projects exist</h3>
-            <p style="margin: 0 0 20px 0; font-size: 0.95rem;">Get started by creating your first QA project.</p>
-            <button class="btn btn-primary" onclick="document.getElementById('createProjectModal').style.display='flex'">Create QA Project</button>
-        </div>
-    </div>
-    {% endfor %}
+{% block page_subtitle %}<p class="text-muted">One workspace for each website and its QA history.</p>{% endblock %}
+{% block topbar_actions %}<a class="btn btn-secondary" href="/historical-resources">Historical Resources</a> <button class="btn btn-primary" onclick="openDialog('createProjectModal')">Create QA Project</button>{% endblock %}
+{% block content %}<div class="project-grid">{% for p in projects %}<article class="panel">
+<div class="eyebrow">{{ p.environment }}</div>
+<h2>
+<a href="/project/{{ p.id }}">{{ p.name }}</a>
+</h2>
+<p class="preserve-lines text-muted">{{ p.target_url }}</p>
+<p class="text-muted">{{ p.tester_name }} · Last run {{ p.last_run_local }}</p>
+<div class="actions">
+<a class="btn btn-secondary" href="/project/{{ p.id }}">Open workspace</a>{% if p.latest_completed_id %}<a class="btn btn-primary" href="/run/{{ p.latest_completed_id }}">View latest results</a>{% else %}<a class="btn btn-primary" href="/project/{{ p.id }}/dry-run">Start New QA Test</a>{% endif %}</div>
+</article>{% else %}<section class="panel empty">
+<h2>Create your first project</h2>
+<p>Add the website, environment and tester. All future runs stay in this workspace.</p>
+<button class="btn btn-primary" onclick="openDialog('createProjectModal')">Create QA Project</button>
+</section>{% endfor %}</div>
+<div id="createProjectModal" class="modal">
+<form class="panel" onsubmit="event.preventDefault();createProject()">
+<div class="modal-title">
+<h2>Create QA Project</h2>
+<button type="button" class="btn btn-secondary" onclick="closeDialog('createProjectModal')">Cancel</button>
 </div>
-
-<!-- Simple Modal -->
-<div id="createProjectModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; display: flex;">
-    <div class="card" style="width: 400px; max-width: 90%; background: white;">
-        <h3 style="margin-top: 0;">Create QA Project</h3>
-        <div class="form-group">
-            <label>Project name:</label> 
-            <input class="form-control" type="text" id="p_name">
-        </div>
-        <div class="form-group">
-            <label>Website to test:</label> 
-            <input class="form-control" type="text" id="p_url" placeholder="https://example.com">
-        </div>
-        <div class="form-group">
-            <label>Environment:</label> 
-            <input class="form-control" type="text" id="p_env" value="Development">
-        </div>
-        <div class="form-group">
-            <label>Tester:</label> 
-            <input class="form-control" type="text" id="p_tester">
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-            <button class="btn btn-secondary" onclick="document.getElementById('createProjectModal').style.display='none'">Cancel</button>
-            <button class="btn btn-primary" id="btnCreate" onclick="createProject()">Create Project</button>
-        </div>
-        <div id="createError" class="error" style="display:none;"></div>
-    </div>
+<p class="text-muted">Set the context once; choose the test scope when starting a run.</p>
+<div class="form-group">
+<label for="p_name">Project name</label>
+<input class="form-control" id="p_name" required>
 </div>
-<script>
-    document.getElementById('createProjectModal').style.display = 'none';
-
-    async function createProject() {
-        const btn = document.getElementById('btnCreate');
-        const errDiv = document.getElementById('createError');
-        
-        btn.disabled = true;
-        btn.textContent = "Creating project...";
-        errDiv.style.display = 'none';
-
-        const payload = {
-            name: document.getElementById('p_name').value,
-            target_url: document.getElementById('p_url').value,
-            environment: document.getElementById('p_env').value,
-            tester_name: document.getElementById('p_tester').value
-        };
-
-        try {
-            const res = await fetch('/api/projects', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
-            
-            if(data.status === 'success') {
-                showToast("✓ Project created");
-                setTimeout(() => window.location.reload(), 500);
-            } else {
-                btn.disabled = false;
-                btn.textContent = "Create Project";
-                errDiv.textContent = data.message || "Failed to create project.";
-                errDiv.style.display = 'block';
-            }
-        } catch (error) {
-            btn.disabled = false;
-            btn.textContent = "Create Project";
-            errDiv.textContent = "Network error. Could not connect to server.";
-            errDiv.style.display = 'block';
-        }
-    }
-</script>
-{% endblock %}
+<div class="form-group">
+<label for="p_url">Website URL</label>
+<input class="form-control" id="p_url" type="url" placeholder="https://example.com" required>
+</div>
+<div class="field-grid">
+<div class="form-group">
+<label for="p_env">Environment</label>
+<input class="form-control" id="p_env" placeholder="e.g. Staging, Production, or Localhost" required>
+</div>
+<div class="form-group">
+<label for="p_tester">Tester</label>
+<input class="form-control" id="p_tester" placeholder="e.g. QA Tester" required>
+</div>
+</div>
+<p id="createError" class="error" role="alert">
+</p>
+<div class="actions">
+<button class="btn btn-primary" id="btnCreate" type="submit">Create Project</button>
+</div>
+</form>
+</div>
+<script>async function createProject(){const btn=document.getElementById('btnCreate');btn.disabled=true;try{const r=await fetch('/api/projects',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('p_name').value,target_url:document.getElementById('p_url').value,environment:document.getElementById('p_env').value,tester_name:document.getElementById('p_tester').value})}),data=await r.json();if(!r.ok||data.status!=='success')throw Error(data.error||data.message||'Could not create project');queueFeedback('Project created');location.href='/project/'+data.id;}catch(e){document.getElementById('createError').textContent=e.message;btn.disabled=false;}}</script>{% endblock %}

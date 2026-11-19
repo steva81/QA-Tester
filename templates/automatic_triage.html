@@ -1,0 +1,26 @@
+{% if triage %}<section class="panel advisory-panel" id="automatic-triage">
+<div class="eyebrow">Advisory only</div>
+<h3>Automatic Triage</h3>
+<p>Suggestions assist review. Your saved Severity, Risk, Confidence and status remain authoritative.</p>
+<p>
+<span class="badge badge-warning">{{ triage.priority }} priority · {{ triage.priority_score }}</span> <strong>Human review {{ 'rejected by tester' if finding.review_status == 'REJECTED' else 'approved by tester' if finding.review_status == 'APPROVED' else 'required' }}</strong>
+</p>
+<p>{{ triage.review_reason }}</p>
+<h4>Automatic suggestions</h4>
+<dl>
+<dt>Severity</dt>
+<dd>{{ triage.suggested_severity }}</dd>
+<dt>Risk</dt>
+<dd>{{ triage.suggested_risk }}</dd>
+<dt>Confidence</dt>
+<dd>{{ triage.suggested_confidence }}</dd>
+</dl>
+<h4>Related technical theme</h4>
+<p>{{ triage.evidence_count }} group evidence record(s) · {{ triage.finding_ids|length }} separate finding(s) · {{ triage.page_count }} page(s) · {{ triage.viewports|join(', ') or 'Viewports not recorded' }}</p>{% if triage.finding_ids|length > 1 %}<p>Related findings (original evidence retained): {% for id in triage.finding_ids if id != finding.id %}<a href="/finding/{{ id }}">Finding #{{ id }}</a>{% if not loop.last %} · {% endif %}{% endfor %}</p>{% endif %}<details>
+<summary>Why these suggestions and priority?</summary>
+<dl>{% for label,key in [('Grouping','grouping'),('Severity','severity'),('Risk','risk'),('Confidence','confidence'),('Priority','priority')] %}<dt>{{ label }}</dt>
+<dd>{{ triage.reasons[key] }}</dd>{% endfor %}</dl>
+</details>
+<button class="btn btn-secondary" id="recalculate-triage" type="button">Recalculate Triage</button>
+</section>
+<script>document.getElementById('recalculate-triage').addEventListener('click',async function(){const restore=beginAction(this,'Recalculating…');try{const response=await fetch('/api/runs/{{ run.id }}/triage',{method:'POST'});if(!response.ok)throw Error();queueFeedback('Advisory triage refreshed');location.reload()}catch(e){showToast('Could not recalculate triage')}finally{restore()}});</script>{% endif %}

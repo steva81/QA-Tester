@@ -61,6 +61,36 @@ def assess_finding(title, actual_result, area, viewport):
             'impact': "A JavaScript exception was detected in the browser. Depending on where the error occurred, some page functionality may fail or behave unexpectedly.",
             'recommendation': "Review the recorded JavaScript error and available console or stack information to identify the affected code or dependency, then verify the behavior again after correction."
         }
+
+    # I. Dangling aria-controls / Missing Target Panel
+    if 'dangling_aria_controls' in actual or 'dangling target' in title_lower or 'element was not found in the dom' in actual:
+        return {
+            'severity': 'Medium',
+            'risk': 'Medium',
+            'confidence': 'High',
+            'impact': "An interactive disclosure control references a non-existent DOM element via aria-controls. Screen reader users and assistive technologies receive broken element references, and the associated content cannot be located or controlled.",
+            'recommendation': "Verify the aria-controls attribute on the control. Ensure the referenced ID exists in the DOM or update the markup so that aria-controls correctly identifies the target panel."
+        }
+
+    # J. Unrevealed Content / Content Not Revealed
+    if 'content_not_revealed' in actual or 'unrevealed content' in title_lower or 'remained hidden' in actual:
+        return {
+            'severity': 'Medium',
+            'risk': 'Medium',
+            'confidence': 'High',
+            'impact': "An expandable control toggled its aria-expanded state, but the associated content panel remained hidden. Users activating the control receive no visible content or feedback.",
+            'recommendation': "Review the event handler and CSS rules associated with the control. Ensure that toggling the control properly removes the hidden attribute or updates display styles on the target panel."
+        }
+
+    # K. Control Click Script Error / Crash On Click
+    if 'page_script_error' in actual or 'crash on click' in title_lower or 'during click, leaving control inert' in actual:
+        return {
+            'severity': 'High',
+            'risk': 'High',
+            'confidence': 'High',
+            'impact': "Activating the control caused an uncaught JavaScript exception in the browser. The intended state transition was blocked and subsequent interactive page functionality may become unresponsive.",
+            'recommendation': "Inspect the click event listener and stack trace. Address the uncaught exception (e.g. TypeError or null reference) to ensure that the control executes safely."
+        }
         
     # E. Horizontal Overflow
     if 'horizontal overflow' in actual or 'horizontal scrolling' in actual:
@@ -72,6 +102,26 @@ def assess_finding(title, actual_result, area, viewport):
             'recommendation': "Review the affected layout at the recorded viewport size and identify which element exceeds the available width. Adjust the relevant responsive layout or content styling and retest."
         }
         
+    # G. Missing Form Label
+    if 'missing form label' in actual or 'missing form label' in title_lower:
+        return {
+            'severity': 'Unreviewed',
+            'risk': 'Unreviewed',
+            'confidence': 'Unreviewed',
+            'impact': "An input field on the page lacks an associated label or accessibility attribute. Users relying on screen readers may not be able to identify the purpose of the input, and clicking label text will not focus the control. Because the automated check does not record the specific input element, human inspection is needed to locate the control and verify user impact.",
+            'recommendation': "Inspect the page forms and identify any unlabeled input controls. Associate each control with a descriptive <label for=\"id\"> or provide an aria-label / aria-labelledby attribute, then verify accessibility manually."
+        }
+
+    # H. Missing Document Title
+    if 'missing or empty document title' in actual or 'missing document title' in actual or 'missing document title' in title_lower:
+        return {
+            'severity': 'Unreviewed',
+            'risk': 'Unreviewed',
+            'confidence': 'Unreviewed',
+            'impact': "The webpage is missing a <title> element in its <head> section, or the title element is blank. Browser tabs, window switchers, bookmarks, and search results may display the raw URL instead of an informative title, making tab navigation difficult.",
+            'recommendation': "Add a descriptive, non-empty <title> element within the <head> section of the HTML document (e.g. <title>Page Name - Site Name</title>) and retest."
+        }
+
     # Fallback
     return {
         'severity': 'Unreviewed',
@@ -80,3 +130,4 @@ def assess_finding(title, actual_result, area, viewport):
         'impact': "[Requires Human Review]",
         'recommendation': "[Requires Human Review]"
     }
+

@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "product": "QA Tester 1.0",
+  "locked_versions": {
+    "cpython": "3.12.10",
+    "playwright": "1.64.1",
+    "playwright_chromium_revision": "1248",
+    "playwright_chromium_browser_version": "156.0.8078.4",
+    "playwright_headless_shell_revision": "1248",
+    "playwright_headless_shell_browser_version": "156.0.8078.4",
+    "clr_loader": "0.3.1",
+    "pythonnet": "3.2.1",
+    "pywebview": "4.4.1"
+  },
+  "dll_entries": {
+    "_internal/VCRUNTIME140.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "vcruntime140.dll",
+      "expected_sha256": "052AD6A20D375957E82AA6A3C441EA548D89BE0981516CA7EB306E063D5027F4"
+    },
+    "_internal/VCRUNTIME140_1.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "vcruntime140_1.dll",
+      "expected_sha256": "6A99BC0128E0C7D6CBBF615FCC26909565E17D4CA3451B97F8987F9C6ACBC6C8"
+    },
+    "_internal/chrome_elf.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/chrome_elf.dll",
+      "expected_sha256": "8A31C1966D0976CF0947DD70EC74126DE48C212D52C1FC821803AC70D14B8389"
+    },
+    "_internal/libcrypto-3.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "DLLs/libcrypto-3.dll",
+      "expected_sha256": "CCFFFDDCD3DEFB8D899026298AF9AF43BC186130F8483D77E97C93233D5F27D7"
+    },
+    "_internal/libffi-8.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "DLLs/libffi-8.dll",
+      "expected_sha256": "EFF52743773EB550FCC6CE3EFC37C85724502233B6B002A35496D828BD7B280A"
+    },
+    "_internal/libssl-3.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "DLLs/libssl-3.dll",
+      "expected_sha256": "007142039F04D04E0ED607BDA53DE095E5BC6A8A10D26ECEDDE94EA7D2D7EEFE"
+    },
+    "_internal/python312.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "python312.dll",
+      "expected_sha256": "9A0E3435AAA680D868150F87AB3E388AD2EEBC22F87E036155C7B4EDA8CD2120"
+    },
+    "_internal/sqlite3.dll": {
+      "origin_category": "python_base",
+      "owner_distribution": "cpython",
+      "owner_version": "3.12.10",
+      "source_relpath": "DLLs/sqlite3.dll",
+      "expected_sha256": "8DAA45684BF6688FCA28D956B2E8942F2FA98F656675CE68E6D61DD869848A7A"
+    },
+    "_internal/clr_loader/ffi/dlls/amd64/ClrLoader.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "clr_loader",
+      "owner_version": "0.3.1",
+      "source_relpath": "clr_loader/ffi/dlls/amd64/ClrLoader.dll",
+      "expected_sha256": "07F62BCB1B70320F221FFB2CFC5CE6133815195F3E7CDB8D833222506188C2AC"
+    },
+    "_internal/clr_loader/ffi/dlls/x86/ClrLoader.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "clr_loader",
+      "owner_version": "0.3.1",
+      "source_relpath": "clr_loader/ffi/dlls/x86/ClrLoader.dll",
+      "expected_sha256": "3128381D133F4FF746ADD70100CFEF713CE2D78F2B12C02EC24EC453C5DFAB0D"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/D3DCompiler_47.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/D3DCompiler_47.dll",
+      "expected_sha256": "F5C95E919B4FFA1AC71049CD45B9F986D2965E6888395CA2806337985334FA56"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/chrome.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/chrome.dll",
+      "expected_sha256": "40A2C35F157D2C2AB02F6D53B890C656C725FD1640F1CA57085EDADF90D39EEA"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/chrome_elf.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/chrome_elf.dll",
+      "expected_sha256": "8A31C1966D0976CF0947DD70EC74126DE48C212D52C1FC821803AC70D14B8389"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/chrome_wer.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/chrome_wer.dll",
+      "expected_sha256": "F4D3FC0BC3DD82CF7192E4FCA152E56EC9ADA95303760C1A18C3D71A66513B17"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/dxcompiler.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/dxcompiler.dll",
+      "expected_sha256": "A402EAC55206F87DF0A9455DB212D12BE3B113C2B6DD647BA44864BF072CFB4F"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/libEGL.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/libEGL.dll",
+      "expected_sha256": "9C94A5C215BA360219AA66D57B6619759704D9DDE10D6DE8EA51FF80081CBE7D"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/libGLESv2.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/libGLESv2.dll",
+      "expected_sha256": "D9A36F870CD93474326A88AC8EA8654DFC21941CD2469647D22AC0E0E0A1E647"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/vk_swiftshader.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/vk_swiftshader.dll",
+      "expected_sha256": "09E8B0AF95F03BD1F1C97E5CAB16CFE9A68E2C62275265032F8CABE2FC43299B"
+    },
+    "_internal/playwright_browsers/chromium-1248/chrome-win64/vulkan-1.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium",
+      "owner_version": "1248",
+      "source_relpath": "chromium-1248/chrome-win64/vulkan-1.dll",
+      "expected_sha256": "1E66E9C21DD58393B8A9CD4995697B40A9B832EEBF80B7D3B119BA1733947B6B"
+    },
+    "_internal/playwright_browsers/chromium_headless_shell-1248/chrome-headless-shell-win64/libEGL.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium-headless-shell",
+      "owner_version": "1248",
+      "source_relpath": "chromium_headless_shell-1248/chrome-headless-shell-win64/libEGL.dll",
+      "expected_sha256": "9C94A5C215BA360219AA66D57B6619759704D9DDE10D6DE8EA51FF80081CBE7D"
+    },
+    "_internal/playwright_browsers/chromium_headless_shell-1248/chrome-headless-shell-win64/libGLESv2.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium-headless-shell",
+      "owner_version": "1248",
+      "source_relpath": "chromium_headless_shell-1248/chrome-headless-shell-win64/libGLESv2.dll",
+      "expected_sha256": "D9A36F870CD93474326A88AC8EA8654DFC21941CD2469647D22AC0E0E0A1E647"
+    },
+    "_internal/playwright_browsers/chromium_headless_shell-1248/chrome-headless-shell-win64/vk_swiftshader.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium-headless-shell",
+      "owner_version": "1248",
+      "source_relpath": "chromium_headless_shell-1248/chrome-headless-shell-win64/vk_swiftshader.dll",
+      "expected_sha256": "09E8B0AF95F03BD1F1C97E5CAB16CFE9A68E2C62275265032F8CABE2FC43299B"
+    },
+    "_internal/playwright_browsers/chromium_headless_shell-1248/chrome-headless-shell-win64/vulkan-1.dll": {
+      "origin_category": "playwright_browsers",
+      "owner_distribution": "playwright-chromium-headless-shell",
+      "owner_version": "1248",
+      "source_relpath": "chromium_headless_shell-1248/chrome-headless-shell-win64/vulkan-1.dll",
+      "expected_sha256": "1E66E9C21DD58393B8A9CD4995697B40A9B832EEBF80B7D3B119BA1733947B6B"
+    },
+    "_internal/pythonnet/runtime/Python.Runtime.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pythonnet",
+      "owner_version": "3.2.1",
+      "source_relpath": "pythonnet/runtime/Python.Runtime.dll",
+      "expected_sha256": "2EBD4492E28442EF1F1AF587AFE5B3A090C2EBFA220758DED4F1450F2A27F13A"
+    },
+    "_internal/webview/lib/Microsoft.Web.WebView2.Core.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/Microsoft.Web.WebView2.Core.dll",
+      "expected_sha256": "5C8C1EBCDA165080F47028AE562488FA6AEB137E5CB9D65F50926BB1F4D2C3DE"
+    },
+    "_internal/webview/lib/Microsoft.Web.WebView2.WinForms.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/Microsoft.Web.WebView2.WinForms.dll",
+      "expected_sha256": "392DE22BA90A106447AF6AB06223D3941BC024028FA53F2EC32A225B08856544"
+    },
+    "_internal/webview/lib/WebBrowserInterop.x64.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/WebBrowserInterop.x64.dll",
+      "expected_sha256": "F6A646470F0E1058224A52E8E2E217501DCA46939B30BFC9A5DD4DCDD43F088D"
+    },
+    "_internal/webview/lib/WebBrowserInterop.x86.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/WebBrowserInterop.x86.dll",
+      "expected_sha256": "4E527297FBEA7C5A0419F3A6AF307C2681787BEB0BF0EF3FEA849A7FD85A08DC"
+    },
+    "_internal/webview/lib/runtimes/win-arm64/native/WebView2Loader.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/runtimes/win-arm64/native/WebView2Loader.dll",
+      "expected_sha256": "48E89827AF4572944B21A4657F9FFEE9D2AC56AF84E2FEF6DE6DFE6CCEF731B5"
+    },
+    "_internal/webview/lib/runtimes/win-x64/native/WebView2Loader.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/runtimes/win-x64/native/WebView2Loader.dll",
+      "expected_sha256": "824E7D6A57E7A107BF3982BF593315547F8E578F26994E51A2D7B984A58CEE1C"
+    },
+    "_internal/webview/lib/runtimes/win-x86/native/WebView2Loader.dll": {
+      "origin_category": "venv_packages",
+      "owner_distribution": "pywebview",
+      "owner_version": "4.4.1",
+      "source_relpath": "webview/lib/runtimes/win-x86/native/WebView2Loader.dll",
+      "expected_sha256": "3DFC39DDBB294B55829674349D054E8968B3D041EE1A3F068DA7A2B5B87B913A"
+    }
+  }
+}

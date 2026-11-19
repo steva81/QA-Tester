@@ -1,0 +1,31 @@
+<section class="card" id="executive-summary">
+    <h3>Executive Summary — {{ report.outcome }}</h3>
+    <p>{{ report.summary }}</p>
+    <p>Customer findings: {{ report.customer_finding_count }};
+       High priority: {{ report.priorities.High }}; Medium priority: {{ report.priorities.Medium }}; Low priority: {{ report.priorities.Low }};
+       Human review / retest queue: {{ report.review_queue|length }}.</p>
+    <p>{{ report.next_action }}</p>
+</section>
+{% include 'crawl_coverage.html' %}
+<section class="card" id="report-review-queue">
+    <h3>Review Queue</h3>
+    {% for f in report.review_queue %}<p><a href="/finding/{{ f.id }}">{{ f.stable_id }}</a> — {{ f.triage.priority }} priority; {{ f.status }}; {{ f.review_display }}. {{ f.triage.review_reason }}</p>
+    {% else %}<p>No findings currently require human review or retest under the accepted triage rules.</p>{% endfor %}
+</section>
+{% if triage %}
+<section class="card" id="triage-priority">
+    <h3>Automatic Triage — Review Order / Prioritized Findings</h3>
+    <p>Related findings remain separate records with all original evidence. Suggestions require human verification.</p>
+    <ol>{% for f in report.findings %}
+        <li><a href="/finding/{{ f.id }}">{{ f.stable_id }} — {{ f.title }}</a>: {{ f.triage.priority }} priority ({{ f.triage.priority_score }}).
+            Effective Severity: {{ f.triage.effective_severity }}; Risk: {{ f.triage.effective_risk }}; Confidence: {{ f.triage.effective_confidence }}.
+            Suggested Severity: {{ f.triage.suggested_severity }}; Risk: {{ f.triage.suggested_risk }}; Confidence: {{ f.triage.suggested_confidence }}.
+            {{ f.triage.page_count }} pages; {{ f.triage.viewports|join(', ') }}; {{ f.triage.evidence_count }} group evidence record(s); {{ f.triage.finding_ids|length }} related finding(s).
+            Review: {{ f.review_display }}; Human review required: {{ 'yes' if f.triage.needs_human_review else 'no' }}.</li>
+    {% endfor %}</ol>
+    <h3>Related Themes</h3>
+    <p>Related by matching technical evidence; separate findings, not proven duplicates or a proven root cause.</p>
+    {% for group in report.related_groups %}<p>{{ group.bug_ids|join(', ') }} — {{ group.finding_ids|length }} related findings; {{ group.evidence_count }} evidence records; {{ group.page_count }} pages.</p>
+    {% else %}<p>No multi-finding themes supported by matching technical evidence.</p>{% endfor %}
+</section>
+{% endif %}

@@ -1,378 +1,233 @@
-{% extends "base.html" %}
-
+{% extends 'base.html' %}
 {% block page_title %}Finding {{ finding.stable_id }}{% endblock %}
-
-{% block topbar_actions %}
-<a href="/run/{{ finding.run_id }}" class="btn btn-secondary">Back to Results</a>
-{% endblock %}
-
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 24px;">
-    <div style="flex: 1 1 300px; min-width: 0;">
-        <h2 style="margin-top: 0; margin-bottom: 8px; font-size: 1.5rem; letter-spacing: -0.025em; word-break: break-word; overflow-wrap: anywhere;">{{ finding.stable_id }} – {{ finding.title }}</h2>
-        <p class="text-muted" style="margin: 0; font-size: 0.95rem;">Run #{{ finding.run_id }} • Project: <strong>{{ project.name }}</strong></p>
-    </div>
-    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-        <button class="btn btn-outline" onclick="copyFullReport()">Copy Full Report</button>
-        <button class="btn btn-secondary" onclick="toggleEdit()">Edit Finding</button>
-        <button class="btn btn-success" onclick="updateReviewStatus('APPROVED')">Approve Report</button>
-        <button class="btn btn-danger" onclick="updateReviewStatus('REJECTED')">Reject Report</button>
-    </div>
+<section class="panel">
+<div class="panel-heading">
+<div>
+<div class="actions">
+<span class="badge">{{ finding.stable_id }}</span>
+<span class="badge">{{ finding.status }}</span>
+<span class="badge {{ 'badge-success' if finding.review_status == 'APPROVED' else 'badge-danger' if finding.review_status == 'REJECTED' else 'badge-warning' }}">{{ display_review_status(finding.review_status) }}</span>
 </div>
-
-<div class="card">
-    <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; font-size: 1.25rem;">Finding Summary</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px;">
-        <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-            <strong style="font-size: 0.95rem; display: block; margin-bottom: 4px;">Severity:</strong>
-            <span class="text-muted" style="display:block; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.3;">Functional impact</span>
-            <span class="badge {{ 'badge-danger' if finding.severity == 'High' else 'badge-warning' if finding.severity == 'Medium' else 'badge-info' if finding.severity == 'Low' else 'badge-neutral' }}">{{ display_severity_risk(finding.severity) }}</span>
-        </div>
-        <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-            <strong style="font-size: 0.95rem; display: block; margin-bottom: 4px;">Risk:</strong>
-            <span class="text-muted" style="display:block; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.3;">Potential exposure</span>
-            <span class="badge {{ 'badge-danger' if finding.risk == 'High' else 'badge-warning' if finding.risk == 'Medium' else 'badge-info' if finding.risk == 'Low' else 'badge-neutral' }}">{{ display_severity_risk(finding.risk) }}</span>
-        </div>
-        <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-            <strong style="font-size: 0.95rem; display: block; margin-bottom: 4px;">Confidence:</strong>
-            <span class="text-muted" style="display:block; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.3;">Assessment certainty</span>
-            <span class="badge {{ 'badge-success' if finding.confidence == 'High' else 'badge-warning' if finding.confidence == 'Medium' else 'badge-info' if finding.confidence == 'Low' else 'badge-neutral' }}">{{ display_severity_risk(finding.confidence) }}</span>
-        </div>
-        <div style="background: var(--gray-50); padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
-            <strong style="font-size: 0.95rem; display: block; margin-bottom: 4px;">Status:</strong>
-            <span class="text-muted" style="display:block; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.3;">Lifecycle state</span>
-            <span class="badge {{ 'badge-danger' if finding.status == 'OPEN' else 'badge-neutral' }}">{{ finding.status }}</span>
-        </div>
-        <div style="background: {% if display_review_status(finding.review_status) == 'Pending review' %}var(--warning-light){% elif finding.review_status == 'APPROVED' %}var(--success-light){% else %}var(--danger-light){% endif %}; padding: 16px; border-radius: var(--radius-sm); border: 1px solid {% if display_review_status(finding.review_status) == 'Pending review' %}#fde68a{% elif finding.review_status == 'APPROVED' %}#a7f3d0{% else %}#fecaca{% endif %};">
-            <strong style="font-size: 0.95rem; display: block; margin-bottom: 4px;">Review Status:</strong>
-            <span class="text-muted" style="display:block; font-size: 0.8rem; margin-bottom: 12px; line-height: 1.3;">Human verification</span>
-            {% if display_review_status(finding.review_status) == 'Pending review' %}
-            <span class="badge badge-warning">Pending review</span>
-            {% else %}
-            <span class="badge {{ 'badge-success' if finding.review_status == 'APPROVED' else 'badge-danger' }}">{{ finding.review_status }}</span>
-            {% endif %}
-        </div>
-    </div>
+<h2 style="margin-top:12px">{{ finding.title }}</h2>
+<p class="text-muted">{{ finding.area }} · {{ finding.timestamp_local }}</p>
 </div>
-
-<!-- EDIT FORM -->
-<div id="edit-form" class="card" style="display: none; background: var(--primary-light, #f0f7ff); border: 1px solid var(--border);">
-    <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 10px;">Review Finding</h3>
-    <div class="grid-4">
-        <div class="form-group">
-            <label>Bug Status:</label>
-            <select id="f_status" class="form-control">
-                <option>OPEN</option><option>RETEST</option><option>FIXED</option>
-                <option>CLOSED</option><option>REJECTED</option><option>DUPLICATE</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Severity:</label>
-            <select id="f_sev" class="form-control"><option value="Unreviewed">Not reviewed yet</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select>
-        </div>
-        <div class="form-group">
-            <label>Risk:</label>
-            <select id="f_risk" class="form-control"><option value="Unreviewed">Not reviewed yet</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select>
-        </div>
-        <div class="form-group">
-            <label>Confidence:</label>
-            <select id="f_conf" class="form-control"><option value="Unreviewed">Not reviewed yet</option><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select>
-        </div>
-    </div>
-    <div class="form-group"><label>Impact:</label> <textarea class="form-control" id="f_impact" style="min-height:80px;">{{ finding.impact }}</textarea></div>
-    <div class="form-group"><label>Recommendation:</label> <textarea class="form-control" id="f_rec" style="min-height:80px;">{{ finding.recommendation }}</textarea></div>
-    <div class="form-group"><label>Plain-English Explanation:</label> <textarea class="form-control" id="f_expl_en" style="min-height:80px;">{{ finding.plain_language_explanation }}</textarea></div>
-    <div class="form-group"><label>Förklaring för mig (SV):</label> <textarea class="form-control" id="f_expl_sv_learn" style="min-height:80px;">{{ finding.learning_explanation_sv }}</textarea></div>
-    <div class="form-group"><label>Så kan jag förklara det (SV):</label> <textarea class="form-control" id="f_expl_sv_verb" style="min-height:80px;">{{ finding.how_to_explain_sv }}</textarea></div>
-    
-    <div style="margin-top: 15px;">
-        <button class="btn btn-primary" onclick="saveEdits()">Save Changes</button>
-        <button class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
-    </div>
+<button class="btn btn-primary" onclick="toggleEdit()">Edit Finding</button>
 </div>
-
-<div class="card">
-    <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; font-size: 1.25rem;">Official QA Report</h3>
-    
-    <div style="background: var(--gray-50); padding: 20px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 24px;">
-        <p style="margin:0 0 8px 0;"><strong>Bug ID / Title:</strong> <span style="color: var(--primary); font-weight: 500;">{{ finding.stable_id }}</span> – {{ finding.title }}</p>
-        <p style="margin:0 0 8px 0; overflow-wrap: anywhere;"><strong>Platform:</strong> {{ project.name }} (<a href="{{ project.target_url }}" target="_blank" style="color: var(--primary); text-decoration: none;" class="text-mono">{{ project.target_url }}</a>)</p>
-        <p style="margin:0 0 0 0;"><strong>Area:</strong> {{ finding.area }}</p>
-    </div>
-    
-    <h4 style="margin-top: 0; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-primary);">Description</h4>
-    <div style="background: var(--surface); padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">
-        {{ finding.description | replace('\n', '<br>') | safe }}
-    </div>
-    
-    <h4 style="margin-top: 0; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-primary);">What does this finding mean?</h4>
-    <div style="background: var(--surface); padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 24px; color: var(--text-secondary); line-height: 1.6;">
-        {{ finding.plain_language_explanation | replace('\n', '<br>') | safe }}
-    </div>
-    
-    <div class="grid-2-responsive" style="gap: 24px;">
-        <div>
-            <h4 style="margin-top: 0; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-primary);">Impact</h4>
-            <div style="background: var(--surface); padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); line-height: 1.6; height: calc(100% - 32px);">
-                {{ finding.impact | replace('\n', '<br>') | safe }}
-            </div>
-        </div>
-        <div>
-            <h4 style="margin-top: 0; margin-bottom: 8px; font-size: 1.05rem; color: var(--text-primary);">Recommendation</h4>
-            <div style="background: var(--surface); padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-secondary); line-height: 1.6; height: calc(100% - 32px);">
-                {{ finding.recommendation | replace('\n', '<br>') | safe }}
-            </div>
-        </div>
-    </div>
+<div class="actions">
+<button class="btn btn-success" onclick="updateReviewStatus('APPROVED')">Approve finding</button>
+<button class="btn btn-negative" onclick="updateReviewStatus('REJECTED')">Reject finding</button>
+<a class="btn btn-secondary" href="/run/{{ run.id }}?tab=findings">All run findings</a>
+<a class="btn btn-report" href="/run/{{ run.id }}?tab=reports">Preview, copy &amp; export report →</a>
 </div>
-
-<!-- INTERNAL TEXT FOR COPYING (HIDDEN) -->
-<div id="report-text" style="display: none;">QA Test Report
-
-Project: {{ project.name }}
-Website: {{ project.target_url }}
-Environment: {{ project.environment }}
-Tester: {{ project.tester_name }}
-Date/Time: {{ run.start_time_local }}
-Run ID: {{ run.id }}
-
-Summary:
-Total Checks: {{ stats.get('PASS', 0) + stats.get('FAIL', 0) + stats.get('OBSERVATION', 0) }}
-PASS: {{ stats.get('PASS', 0) }}
-FAIL: {{ stats.get('FAIL', 0) }}
-OBSERVATION: {{ stats.get('OBSERVATION', 0) }}
-
-Findings Summary:
-{% for f in all_findings %}
-[{{ f.stable_id }}] {{ f.title }} (Sev: {{ display_severity_risk(f.severity) }}, Risk: {{ display_severity_risk(f.risk) }}, Conf: {{ display_severity_risk(f.confidence) }}, Status: {{ f.status }}, Review: {{ display_review_status(f.review_status) }})
-{% endfor %}
-
-Detailed Findings
-{% for f in all_findings %}
-
-Bug ID: {{ f.stable_id }}
-Title: {{ f.title }}
-Platform: {{ project.name }} ({{ project.target_url }})
-Area: {{ f.area }}
-Severity: {{ display_severity_risk(f.severity) }}
-Risk: {{ display_severity_risk(f.risk) }}
-Confidence: {{ display_severity_risk(f.confidence) }}
-Bug Status: {{ f.status }}
-Review Status: {{ display_review_status(f.review_status) }}
-
-Description:
-{{ f.description }}
-
-Plain-Language Explanation:
-{{ f.plain_language_explanation }}
-
-Impact:
-{{ f.impact }}
-
-Recommendation:
-{{ f.recommendation }}
-
-Evidence:
-{% for t in f.evidence %}
----
-URL: {{ t.url }}
-Environment: {{ project.environment }}
-Timestamp: {{ t.timestamp_local }}
-Expected Result: {{ t.expected_result }}
-Actual Result: {{ t.actual_result }}
-Browser: Chromium
-Viewport: {{ t.viewport }}
-Screenshot: {% if t.screenshot_path %}{{ t.screenshot_path.split('\\')[-1].split('/')[-1] }}{% else %}None{% endif %}
-{% endfor %}
-{% endfor %}
+<p class="text-muted" style="margin-top:12px">Review approval and bug status are separate. Approval does not mark a finding as fixed.</p>
+</section>
+{% set effective_severity = triage.effective_severity if triage else finding.severity %}{% set effective_risk = triage.effective_risk if triage else finding.risk %}{% set effective_confidence = triage.effective_confidence if triage else finding.confidence %}
+<section class="panel" style="border-top: 4px solid var(--primary); padding: 22px;">
+<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom: 12px;">
+  <h3 style="margin:0;">Effective assessment &amp; Triage Status</h3>
+  <span class="badge badge-info" style="font-size:12px;">Reports use Effective Values</span>
 </div>
-
-<!-- HTML TEXT FOR COPYING (HIDDEN) -->
-<div id="report-html" style="display: none;">
-    <h2>QA Test Report</h2>
-    <p><strong>Project:</strong> {{ project.name }}</p>
-    <p><strong>Website:</strong> {{ project.target_url }}</p>
-    <p><strong>Environment:</strong> {{ project.environment }}</p>
-    <p><strong>Tester:</strong> {{ project.tester_name }}</p>
-    <p><strong>Date/Time:</strong> {{ run.start_time_local }}</p>
-    <p><strong>Run ID:</strong> {{ run.id }}</p>
-    
-    <h3>Summary:</h3>
-    <p><strong>Total Checks:</strong> {{ stats.get('PASS', 0) + stats.get('FAIL', 0) + stats.get('OBSERVATION', 0) }}</p>
-    <p><strong>PASS:</strong> {{ stats.get('PASS', 0) }}</p>
-    <p><strong>FAIL:</strong> {{ stats.get('FAIL', 0) }}</p>
-    <p><strong>OBSERVATION:</strong> {{ stats.get('OBSERVATION', 0) }}</p>
-
-    <h3>Findings Summary</h3>
-    <table border="1" style="border-collapse: collapse; width: 100%; margin-bottom: 20px;">
-        <tr>
-            <th style="padding: 8px;">Bug ID</th>
-            <th style="padding: 8px;">Finding</th>
-            <th style="padding: 8px;">Severity</th>
-            <th style="padding: 8px;">Risk</th>
-            <th style="padding: 8px;">Confidence</th>
-            <th style="padding: 8px;">Bug Status</th>
-            <th style="padding: 8px;">Review Status</th>
-        </tr>
-        {% for f in all_findings %}
-        <tr>
-            <td style="padding: 8px;">{{ f.stable_id }}</td>
-            <td style="padding: 8px;">{{ f.title }}</td>
-            <td style="padding: 8px;">{{ display_severity_risk(f.severity) }}</td>
-            <td style="padding: 8px;">{{ display_severity_risk(f.risk) }}</td>
-            <td style="padding: 8px;">{{ display_severity_risk(f.confidence) }}</td>
-            <td style="padding: 8px;">{{ f.status }}</td>
-            <td style="padding: 8px;">{{ display_review_status(f.review_status) }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-
-    <h3>Detailed Findings</h3>
-    {% for f in all_findings %}
-    <p><strong>Bug ID:</strong> {{ f.stable_id }}</p>
-    <p><strong>Title:</strong> {{ f.title }}</p>
-    <br>
-    <p><strong>Platform:</strong> {{ project.name }} ({{ project.target_url }})</p>
-    <p><strong>Area:</strong> {{ f.area }}</p>
-    <p><strong>Severity:</strong> {{ display_severity_risk(f.severity) }}</p>
-    <p><strong>Risk:</strong> {{ display_severity_risk(f.risk) }}</p>
-    <p><strong>Confidence:</strong> {{ display_severity_risk(f.confidence) }}</p>
-    <p><strong>Bug Status:</strong> {{ f.status }}</p>
-    <p><strong>Review Status:</strong> {{ display_review_status(f.review_status) }}</p>
-    <br>
-    <p><strong>Description:</strong><br>{{ f.description | replace('\n', '<br>') | safe }}</p>
-    <p><strong>Plain-Language Explanation:</strong><br>{{ f.plain_language_explanation | replace('\n', '<br>') | safe }}</p>
-    <p><strong>Impact:</strong><br>{{ f.impact | replace('\n', '<br>') | safe }}</p>
-    <p><strong>Recommendation:</strong><br>{{ f.recommendation | replace('\n', '<br>') | safe }}</p>
-    <br>
-    <h4>Evidence:</h4>
-    {% for t in f.evidence %}
-    <hr>
-    <p><strong>URL:</strong> <a href="{{ t.url }}">{{ t.url }}</a></p>
-    <p><strong>Environment:</strong> {{ project.environment }}</p>
-    <p><strong>Timestamp:</strong> {{ t.timestamp_local }}</p>
-    <p><strong>Expected Result:</strong> {{ t.expected_result }}</p>
-    <p><strong>Actual Result:</strong> {{ t.actual_result }}</p>
-    <p><strong>Browser:</strong> Chromium</p>
-    <p><strong>Viewport:</strong> {{ t.viewport }}</p>
-    <p><strong>Screenshot:</strong> {% if t.screenshot_path %}{{ t.screenshot_path.split('\\')[-1].split('/')[-1] }}{% else %}None{% endif %}</p>
-    {% endfor %}
-    <br>
-    {% endfor %}
-</div>
-
-<div class="card" style="background: var(--primary-light); border: 1px solid #bfdbfe; box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.02);">
-    <h3 style="margin-top: 0; border-bottom: 1px solid #bfdbfe; padding-bottom: 12px; margin-bottom: 16px; color: var(--primary-dark); font-size: 1.25rem; display: flex; align-items: center; gap: 8px;">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-        My Learning Notes
-    </h3>
-    <p class="text-muted" style="margin-bottom: 20px; font-size: 0.95rem;">This section is only for your learning and is not included in the official QA report.</p>
-    
-    <h4 style="color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">FÖRKLARING FÖR MIG</h4>
-    <p style="white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; background: var(--surface); padding: 16px; border-radius: var(--radius-sm); border: 1px solid #bfdbfe; color: var(--text-secondary); line-height: 1.6; margin-bottom: 20px; box-shadow: var(--shadow-sm);">{{ finding.learning_explanation_sv }}</p>
-    
-    <h4 style="color: var(--primary-dark); font-size: 1.05rem; margin-bottom: 8px;">SÅ KAN JAG FÖRKLARA DET</h4>
-    <p style="white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; background: var(--surface); padding: 16px; border-radius: var(--radius-sm); border: 1px solid #bfdbfe; color: var(--text-secondary); line-height: 1.6; box-shadow: var(--shadow-sm);">{{ finding.how_to_explain_sv }}</p>
-</div>
-
-<div class="card">
-    <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px; font-size: 1.25rem;">Screenshot Evidence</h3>
-    <p class="text-muted" style="margin-bottom: 24px; font-size: 0.95rem;">These screenshots show what QA Tester observed when the finding occurred.</p>
-    
-    {% set ns = namespace(has_screenshot=false) %}
-    <div class="grid-2-responsive">
-    {% for t in tests %}
-        {% if t.screenshot_path %}
-            {% set ns.has_screenshot = true %}
-            <div style="border: 1px solid var(--border); padding: 16px; border-radius: var(--radius); background: var(--gray-50); display: flex; flex-direction: column;">
-                <h4 style="margin-top: 0; margin-bottom: 12px; color: var(--text-primary); font-size: 1.05rem;">{{ t.viewport }}</h4>
-                {% set filename = t.screenshot_path.split('\\')[-1].split('/')[-1] %}
-                
-                {% if t.actual_result and "net::ERR_CONNECTION_REFUSED" in t.actual_result %}
-                <div style="margin-bottom: 16px; padding: 12px; background: var(--warning-light); border-left: 4px solid var(--warning); border-radius: var(--radius-sm); font-size: 0.9rem; color: var(--warning-dark);">
-                    <strong>Note:</strong> The website did not load, so the captured browser view may appear blank.
-                </div>
-                {% endif %}
-                
-                <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 16px;">
-                    <img src="/screenshots/{{ filename }}" alt="Screenshot for {{ finding.stable_id }} on {{ t.viewport }}" style="max-height: 350px; max-width: 100%; display: block; object-fit: contain;">
-                </div>
-                
-                <button class="btn btn-secondary" onclick="openNativeScreenshot('{{ filename }}')" style="width: 100%;">Open Screenshot File</button>
-            </div>
-        {% endif %}
-    {% endfor %}
+<div class="metrics">
+  {% for label, eff_val, saved_val, origin, sugg_val in [
+      ('Severity', effective_severity, finding.severity, finding.severity_origin or 'baseline', triage.suggested_severity if triage else None),
+      ('Risk', effective_risk, finding.risk, finding.risk_origin or 'baseline', triage.suggested_risk if triage else None),
+      ('Confidence', effective_confidence, finding.confidence, finding.confidence_origin or 'baseline', triage.suggested_confidence if triage else None)
+  ] %}
+  {% set tone = ('success' if eff_val == 'High' else 'warning' if eff_val == 'Medium' else 'info' if eff_val == 'Low' else 'neutral') if label == 'Confidence' else ('danger' if eff_val in ['High','Critical'] else 'warning' if eff_val == 'Medium' else 'success' if eff_val == 'Low' else 'neutral') %}
+  <div class="metric assessment-{{ tone }}" style="padding: 16px;">
+    <span style="font-size: 13px; font-weight: 600;">Effective {{ label }}</span>
+    <strong style="font-size: 26px; margin: 4px 0;">{{ display_severity_risk(eff_val) }}</strong>
+    <div style="font-size: 12px; line-height: 1.4; color: var(--text-muted); margin-top: 4px;">
+      {% if origin == 'manual' %}
+        <span style="color: #065f46; font-weight: 600;">Manual (authoritative)</span><br>Saved: {{ saved_val }}
+      {% elif sugg_val and sugg_val != saved_val %}
+        <span style="color: #1e40af; font-weight: 600;">Suggested value used</span><br>Stored: {{ saved_val }} (baseline)
+      {% else %}
+        <span>Baseline: {{ saved_val }}</span>
+      {% endif %}
     </div>
-    
-    {% if not ns.has_screenshot %}
-    <div style="padding: 32px; text-align: center; color: var(--text-muted); background: var(--gray-50); border: 1px dashed var(--gray-300); border-radius: var(--radius);">
-        <p style="margin: 0;"><i>No screenshot available for this finding.</i></p>
-    </div>
-    {% endif %}
+  </div>
+  {% endfor %}
+  <div class="metric assessment-{{ 'success' if finding.review_status == 'APPROVED' else 'danger' if finding.review_status == 'REJECTED' else 'warning' }}" style="padding: 16px;">
+    <span style="font-size: 13px; font-weight: 600;">Review Status</span>
+    <strong style="font-size: 20px; margin: 4px 0;">{{ display_review_status(finding.review_status) }}</strong>
+    <span style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Bug status: {{ finding.status }}</span>
+  </div>
 </div>
-
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
-        <h3 style="margin: 0;">Technical Details</h3>
-        <button class="btn btn-outline" style="font-size: 0.85em;" onclick="toggleTechnical()">Show/Hide Details</button>
-    </div>
-    
-    <div id="tech-details" style="display: none; font-size: 0.9em; background: var(--bg); padding: 15px; border: 1px solid var(--border); border-radius: 4px; overflow-x: auto;">
-        {% for t in tests %}
-        <p><strong>URL:</strong> {{ t.url }}</p>
-        <p><strong>Environment:</strong> {{ project.environment }}</p>
-        <p><strong>Timestamp:</strong> {{ finding.timestamp_local }}</p>
-        <p><strong>Browser:</strong> Chromium</p>
-        <p><strong>Viewport:</strong> {{ t.viewport }}</p>
-        <p><strong>Expected Result:</strong> {{ t.expected_result }}</p>
-        <p><strong>Actual Result:</strong> {{ t.actual_result }}</p>
-        {% if t.screenshot_path %}
-            <p><strong>Screenshot file:</strong> {{ t.screenshot_path.split('\\')[-1].split('/')[-1] }}</p>
-        {% endif %}
-        {% if not loop.last %}<hr style="margin: 15px 0;">{% endif %}
-        {% endfor %}
-    </div>
+<div style="margin-top: 14px; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; font-size: 13px; color: #166534; line-height: 1.5;">
+  <strong>Assessment Rules:</strong> Official reports, export summaries, and matrix calculations strictly use the <strong>Effective</strong> values above. When an assessment has <strong>Manual</strong> provenance, tester-entered values are permanently authoritative. When an assessment is at <strong>Baseline</strong>, advisory triage suggestions automatically supply effective values for reporting until explicitly edited by a human reviewer.
 </div>
-
+</section>
+<div class="split">
+<div>
+<section class="panel">
+<h3>Issue summary</h3>
+<h4>Description</h4>
+<p class="preserve-lines">{{ finding.description }}</p>
+<h4>What does this mean?</h4>
+<p class="preserve-lines">{{ finding.plain_language_explanation }}</p>
+<h4>Impact</h4>
+<p class="preserve-lines">{{ finding.impact }}</p>
+<h4>Recommendation</h4>
+<p class="preserve-lines">{{ finding.recommendation }}</p>
+</section>
+<section class="panel evidence-panel">
+<h3>Original evidence</h3>
+<p class="text-muted">These records belong to this finding. Related findings retain their own evidence.</p>{% for t in tests %}<details class="technical-record evidence-record" open>
+<summary>
+<span class="badge">{{ t.status }}</span>
+<span>{{ t.viewport }}</span>
+<span class="record-url">{{ t.url }}</span>
+</summary>
+<dl>
+<dt>Expected Result</dt>
+<dd>{{ t.expected_result }}</dd>
+<dt>Actual Result</dt>
+<dd class="preserve-lines">{{ t.actual_result }}</dd>
+<dt>Final URL</dt>
+<dd>{{ t.final_url or t.url }}</dd>
+</dl>{% if t.screenshot_path %}{% set image_file=t.screenshot_path.replace('\\','/').split('/')[-1] %}<div class="evidence-preview-box" style="margin-top: 12px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #0f1a19;">
+<div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #142c2b; color: #d0dedc; font-size: 12px;">
+<span><strong>{{ t.viewport }} Evidence</strong> · Preview</span>
+<div style="display: flex; gap: 8px;">
+<a href="/screenshots/{{ image_file }}" target="_blank" rel="noopener" class="btn btn-secondary" style="min-height: 26px; padding: 2px 8px; font-size: 11px; background: #254a46; color: #fff; border-color: #52796e;">Full Size ↗</a>
+<button type="button" class="btn btn-secondary" style="min-height: 26px; padding: 2px 8px; font-size: 11px; background: #254a46; color: #fff; border-color: #52796e;" onclick='openNativeScreenshot({{ image_file|tojson }})'>Open in Windows</button>
+</div>
+</div>
+<div style="max-height: 280px; display: flex; align-items: center; justify-content: center; padding: 8px; overflow: hidden; background: #0a1211;">
+<a href="/screenshots/{{ image_file }}" target="_blank" rel="noopener" style="display: flex; justify-content: center; width: 100%;">
+<img src="/screenshots/{{ image_file }}" alt="{{ t.viewport }} screenshot evidence for {{ finding.stable_id }}" style="max-height: 264px; max-width: 100%; object-fit: contain; border-radius: 4px;">
+</a>
+</div>
+<div class="evidence-caption" style="padding: 8px 12px; font-size: 12px; color: #586966; background: #f6f8f7; border-top: 1px solid var(--border);">
+<strong>Figure: Evidence for {{ finding.stable_id }} ({{ t.viewport }})</strong> — {{ t.actual_result | truncate(140) }}
+</div>
+</div>{% endif %}</details>{% else %}<p>No linked evidence records are available.</p>{% endfor %}</section>
+</div>
+<div>{% include 'automatic_triage.html' %}<section class="panel private-notes" style="border-left: 4px solid #6f5a94; background: #faf8fd; padding: 22px;">
+<div class="eyebrow" style="color: #5a3c80;">Private / internal only</div>
+<h3 style="color: #432b60;">My Learning Notes</h3>
+<p class="text-muted">Never included in official reports, exports, clipboard reports or triage.</p>
+<h4 style="color: #5a3c80; font-size: 13px; letter-spacing: 0.05em; margin-top: 14px;">FÖRKLARING FÖR MIG</h4>
+<p class="preserve-lines" style="overflow-wrap: anywhere; word-break: break-word;">{{ finding.learning_explanation_sv or 'No private note yet.' }}</p>
+<h4 style="color: #5a3c80; font-size: 13px; letter-spacing: 0.05em; margin-top: 14px;">SÅ KAN JAG FÖRKLARA DET</h4>
+<p class="preserve-lines" style="overflow-wrap: anywhere; word-break: break-word;">{{ finding.how_to_explain_sv or 'No private note yet.' }}</p>
+</section>
+</div>
+</div>
+<div class="modal" id="edit-form" style="display:none">
+<form class="panel modal-dialog-panel" onsubmit="event.preventDefault();saveEdits()" style="max-height: 88vh; overflow-y: auto; max-width: 760px; width: 100%; padding: 28px; border-radius: 10px; box-shadow: 0 16px 48px rgba(20,44,43,0.25);">
+<div class="modal-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+<h2>Edit {{ finding.stable_id }}</h2>
+<button type="button" class="btn btn-secondary" onclick="toggleEdit()">Cancel</button>
+</div>
+<fieldset style="border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; margin-bottom: 20px; background: #fff;">
+<legend style="font-weight: 700; color: var(--primary-dark); padding: 0 8px;">Assessment &amp; Status</legend>
+<div style="margin-bottom: 16px; padding: 10px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #334155; line-height: 1.5;">
+  Stored database values are pre-selected in the fields below. Changing an assessment field and clicking <strong>Save Changes</strong> establishes an authoritative <strong>Manual</strong> assessment for that field, which is used directly in reports. Unchanged assessment fields and My Learning Notes preserve existing stored values and provenance. Clicking <strong>Cancel</strong> makes no changes.
+</div>
+<div class="field-grid">
+<div class="form-group">
+<label for="f_status">Bug status</label>
+<select class="form-control" id="f_status">{% for value in ['OPEN','RETEST','FIXED','CLOSED','REJECTED','DUPLICATE'] %}<option>{{ value }}</option>{% endfor %}</select>
+</div>
+<div class="form-group">
+<label for="f_sev">Severity
+<span class="text-muted" style="font-weight:normal; font-size:12px; display:block; margin-top:2px;">
+Stored: {{ finding.severity }} ({{ finding.severity_origin or 'baseline' }}){% if triage %} · Suggested: {{ triage.suggested_severity }} · Effective: {{ effective_severity }}{% endif %}
+</span>
+</label>
+<select class="form-control" id="f_sev">
+<option value="Unreviewed">Not reviewed yet</option>
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+</div>
+<div class="form-group">
+<label for="f_risk">Risk
+<span class="text-muted" style="font-weight:normal; font-size:12px; display:block; margin-top:2px;">
+Stored: {{ finding.risk }} ({{ finding.risk_origin or 'baseline' }}){% if triage %} · Suggested: {{ triage.suggested_risk }} · Effective: {{ effective_risk }}{% endif %}
+</span>
+</label>
+<select class="form-control" id="f_risk">
+<option value="Unreviewed">Not reviewed yet</option>
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+</div>
+<div class="form-group">
+<label for="f_conf">Confidence
+<span class="text-muted" style="font-weight:normal; font-size:12px; display:block; margin-top:2px;">
+Stored: {{ finding.confidence }} ({{ finding.confidence_origin or 'baseline' }}){% if triage %} · Suggested: {{ triage.suggested_confidence }} · Effective: {{ effective_confidence }}{% endif %}
+</span>
+</label>
+<select class="form-control" id="f_conf">
+<option value="Unreviewed">Not reviewed yet</option>
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+</select>
+</div>
+</div>
+</fieldset>
+<fieldset style="border: 1px solid #c5ded9; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; background: #f8fafb;">
+<legend style="font-weight: 700; color: #12665f; padding: 0 8px;">Official Report Content (Public / Shared)</legend>
+<p class="text-muted" style="margin-bottom: 14px; font-size: 13px;">Included in standard and technical export reports, clipboard copies, and client presentations.</p>
+<div class="form-group">
+<label for="f_expl_en">Plain-Language Explanation</label>
+<textarea class="form-control" id="f_expl_en" style="min-height: 84px; width:100%; box-sizing:border-box;">{{ finding.plain_language_explanation }}</textarea>
+</div>
+<div class="form-group">
+<label for="f_impact">Impact</label>
+<textarea class="form-control" id="f_impact" style="min-height: 84px; width:100%; box-sizing:border-box;">{{ finding.impact }}</textarea>
+</div>
+<div class="form-group">
+<label for="f_rec">Recommendation</label>
+<textarea class="form-control" id="f_rec" style="min-height: 84px; width:100%; box-sizing:border-box;">{{ finding.recommendation }}</textarea>
+</div>
+</fieldset>
+<fieldset style="border: 1px solid #d9d0e8; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; background: #faf8fd;">
+<legend style="font-weight: 700; color: #5a3c80; padding: 0 8px;">Private My Learning Notes (Internal Only)</legend>
+<p class="text-muted" style="margin-bottom: 14px; font-size: 13px;">🔒 Strictly private to the tester. Never included in official reports, client exports, or clipboard summaries.</p>
+<div class="form-group">
+<label for="f_expl_sv_learn">Förklaring för mig (SV)</label>
+<textarea class="form-control" id="f_expl_sv_learn" style="min-height: 84px; width:100%; box-sizing:border-box;">{{ finding.learning_explanation_sv }}</textarea>
+</div>
+<div class="form-group">
+<label for="f_expl_sv_verb">Så kan jag förklara det (SV)</label>
+<textarea class="form-control" id="f_expl_sv_verb" style="min-height: 84px; width:100%; box-sizing:border-box;">{{ finding.how_to_explain_sv }}</textarea>
+</div>
+</fieldset>
+<div class="actions" style="justify-content: flex-end; gap: 12px; margin-top: 20px;">
+<button class="btn btn-secondary" type="button" onclick="toggleEdit()">Cancel</button>
+<button class="btn btn-primary" type="submit">Save Changes</button>
+</div>
+</form>
+</div>
+<!-- Canonical clipboard renderers never receive the private editor dictionary. -->
+<div id="report-text" style="display: none;">{{ report_text }}</div>
+<div id="report-html" style="display: none;">{{ report_html|safe }}</div>
+<div id="report-full-text" style="display: none;">{{ report_full_text }}</div>
+<div id="report-full-html" style="display: none;">{{ report_full_html|safe }}</div>
 <script>
-document.getElementById('f_sev').value = "{{ finding.severity }}";
-document.getElementById('f_risk').value = "{{ finding.risk }}";
-document.getElementById('f_conf').value = "{{ finding.confidence }}";
-document.getElementById('f_status').value = "{{ finding.status }}";
-
-async function copyFullReport() {
-    const plainText = document.getElementById('report-text').innerText;
-    const htmlText = document.getElementById('report-html').innerHTML;
-    
-    try {
-        const clipboardItem = new ClipboardItem({
-            'text/plain': new Blob([plainText], { type: 'text/plain' }),
-            'text/html': new Blob([htmlText], { type: 'text/html' })
-        });
-        await navigator.clipboard.write([clipboardItem]);
-        showToast("✓ Report copied with formatting");
-    } catch(err) {
-        // Fallback for older browsers
-        navigator.clipboard.writeText(plainText).then(() => {
-            showToast("✓ Report copied (plain text only)");
-        }).catch(() => {
-            showToast("Failed to copy report.");
-        });
-    }
-}
+document.getElementById('f_sev').value = {{ finding.severity|tojson }};
+document.getElementById('f_risk').value = {{ finding.risk|tojson }};
+document.getElementById('f_conf').value = {{ finding.confidence|tojson }};
+document.getElementById('f_status').value = {{ finding.status|tojson }};
 
 function toggleEdit() {
     const form = document.getElementById('edit-form');
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-function toggleTechnical() {
-    const el = document.getElementById('tech-details');
-    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    if(form.style.display==='flex'){closeDialog('edit-form')}else{openDialog('edit-form')}
 }
 
 async function saveEdits() {
     const payload = {
+        initial_severity: {{ finding.severity|tojson }},
+        initial_risk: {{ finding.risk|tojson }},
+        initial_confidence: {{ finding.confidence|tojson }},
         severity: document.getElementById('f_sev').value,
         risk: document.getElementById('f_risk').value,
         confidence: document.getElementById('f_conf').value,
@@ -392,6 +247,7 @@ async function saveEdits() {
         });
         const data = await res.json();
         if(data.status === 'success') {
+            queueFeedback('Finding saved');
             window.location.reload();
         } else {
             showToast("Failed to save changes.");
@@ -410,6 +266,7 @@ async function updateReviewStatus(status) {
         });
         const data = await res.json();
         if(data.status === 'success') {
+            queueFeedback(status === 'APPROVED' ? 'Review approved' : 'Review rejected');
             window.location.reload();
         } else {
             showToast("Failed to update status.");
